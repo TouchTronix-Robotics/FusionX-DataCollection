@@ -6,7 +6,8 @@ Multimodal data collection app — records synchronized OAK-D stereo video + tac
 
 Grab the latest release from the [Releases](https://github.com/TouchTronix-Robotics/FusionX-DataCollection/releases) page:
 
-- **Linux**: `.AppImage` — make it executable and run
+- **Linux desktop**: `touchtronix-datacollection-*.AppImage` — full desktop GUI
+- **Linux miniPC / touchscreen**: `touchtronix-touch-*.AppImage` — fullscreen touch GUI
 - **Windows**: `.zip` — extract and run `touchtronix-datacollection.exe`
 
 A valid license key is required on first launch.
