@@ -45,6 +45,14 @@ chmod +x touchtronix-*.AppImage
 ./touchtronix-datacollection-*.AppImage
 ```
 
+To install the touch AppImage into the Ubuntu app menu and pin it to the GNOME dock, put `install_touch_app.sh` and `touchtronix-touch-*.AppImage` in `~/Touchtronix`, then run:
+
+```bash
+cd ~/Touchtronix
+chmod +x install_touch_app.sh
+./install_touch_app.sh
+```
+
 The app stores data next to the AppImage:
 
 - `~/Touchtronix/calibrations/` — glove/user calibration JSON files
