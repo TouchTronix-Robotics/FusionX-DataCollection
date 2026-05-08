@@ -35,12 +35,22 @@ sudo usermod -aG dialout $USER
 
 ### AppImage
 
-Make the AppImage executable:
+Recommended folder layout:
 
 ```bash
-chmod +x touchtronix-datacollection-*.AppImage
+mkdir -p ~/Touchtronix
+mv ~/Downloads/touchtronix-*.AppImage ~/Touchtronix/
+cd ~/Touchtronix
+chmod +x touchtronix-*.AppImage
 ./touchtronix-datacollection-*.AppImage
 ```
+
+The app stores data next to the AppImage:
+
+- `~/Touchtronix/calibrations/` — glove/user calibration JSON files
+- `~/Touchtronix/dataset/` — recordings
+
+Keep the AppImage in `~/Touchtronix` so calibration files and recordings stay in one easy-to-find folder.
 
 If the app doesn't launch, your system may need FUSE2:
 
@@ -60,7 +70,7 @@ If the wireless glove dongle isn't detected, install the [CH340 USB-serial drive
 
 ## Using the App
 
-1. **Calibration tab** — select LH/RH glove serial ports, enter a username, click **Start Calibration**. Follow the on-screen prompts. The profile is saved under `calibrations/<user>.json`.
+1. **Calibration tab** — select LH/RH glove serial ports, enter a username, click **Start Calibration**. Follow the on-screen prompts. The profile is saved under `~/Touchtronix/calibrations/<user>.json` when using the recommended AppImage layout.
 2. **Recording tab** — select serial ports, pick an output directory and episode name, (optional) load a calibration file, click **Start Preview** → **Start Recording**. Press **Stop Recording** to save.
 
 Recordings are written as per-frame images plus a Parquet sensor log. Convert to video with the post-processing tool bundled in the internal repo.
