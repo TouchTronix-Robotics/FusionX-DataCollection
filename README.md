@@ -83,3 +83,26 @@ If the wireless glove dongle isn't detected, install the [CH340 USB-serial drive
 2. **Recording tab** — select serial ports, pick an output directory and episode name, (optional) load a calibration file, click **Start Preview** → **Start Recording**. Press **Stop Recording** to save.
 
 Recordings are written as per-frame images plus a Parquet sensor log. Convert to video with the post-processing tool bundled in the internal repo.
+
+## Data Transfer from miniPC
+
+The touch AppImage starts a web download page automatically. Put your laptop/desktop and the miniPC on the same Wi-Fi or LAN, then open:
+
+```text
+http://touchtronix.local:8080
+```
+
+If that address does not load, use the miniPC IP address shown at the bottom of the touch GUI:
+
+```text
+http://<miniPC-ip>:8080
+```
+
+The page lists recorded episodes from `~/Touchtronix/dataset/` and lets you download each episode as a ZIP file.
+
+Troubleshooting:
+
+- Make sure both computers are on the same network.
+- If using Wi-Fi, disable guest/client isolation on the router.
+- If `touchtronix.local` fails, use the raw IP address.
+- Allow port `8080` through any firewall on the miniPC.
