@@ -28,11 +28,13 @@ Then replug the OAK camera. No reboot required.
 ### Glove Serial Port Access
 
 tactile gloves appear as `/dev/ttyUSB*` (wireless dongle) or `/dev/ttyACM*` (wired).
-Add your user to the `dialout` group, then log out and back in:
+Add your user to the `dialout` group:
 
 ```bash
 sudo usermod -aG dialout $USER
 ```
+
+Then fully log out of Ubuntu and log back in so the permission change applies to GUI apps. Rebooting also works.
 
 ### AppImage
 
