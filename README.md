@@ -84,7 +84,29 @@ If the wireless glove dongle isn't detected, install the [CH340 USB-serial drive
 1. **Calibration tab** — select LH/RH glove serial ports, enter a username, click **Start Calibration**. Follow the on-screen prompts. The profile is saved under `~/Touchtronix/calibrations/<user>.json` when using the recommended AppImage layout.
 2. **Recording tab** — select serial ports, pick an output directory and episode name, (optional) load a calibration file, click **Start Preview** → **Start Recording**. Press **Stop Recording** to save.
 
-Recordings are written as per-frame images plus a Parquet sensor log. Convert to video with the post-processing tool bundled in the internal repo.
+Recordings are written as per-frame images plus a Parquet sensor log.
+
+## Standalone Post-Processing
+
+Use the bundled utility to convert one episode folder into MP4 videos:
+
+```bash
+cd FusionX-DataCollection
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r post_processing/requirements.txt
+sudo apt install ffmpeg  # Linux, if ffmpeg/ffprobe are not already installed
+python post_processing/convert_to_video.py /path/to/dataset/recording_xxx
+```
+
+Outputs are written next to `frames.parquet`:
+
+- `rgb.mp4` — RGB image sequence encoded as H.264
+- `preview_glove.mp4` — tactile pressure/bend visualization
+- `preview_all.mp4` — RGB + mono stereo + glove composite preview
+- `video_meta.json` — timestamps, FPS, stream metadata
+
+Dependencies: Python 3.10+, `numpy`, `opencv-python`, `pyarrow`, `tqdm`, plus system `ffmpeg` and `ffprobe` on `PATH` with H.264/libx264 support. No OAK camera, DepthAI, PySide, serial, or license dependencies are required for offline conversion.
 
 ## Data Transfer from miniPC
 
