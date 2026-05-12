@@ -1,29 +1,33 @@
 #!/usr/bin/env python3
 """
-Convert image-per-frame recordings into video files for visualization
-and HuggingFace upload.
+Convert one recorded episode from image-per-frame storage into MP4 previews.
 
-Encodes RGB frames to H.264 (.mp4) at constant frame rate.  The
-``frames.parquet`` is read for metadata and tactile preview rendering
-but is **never modified** — all parquet columns (raw + calibrated) are
-written at recording time by ``multimodal_app.py``.
+Run this standalone utility on an episode directory that contains
+``frames.parquet`` plus optional ``rgb/``, ``mono_left/``, ``mono_right/`` image
+folders and optional ``calib.json``.  The parquet file is read for timestamps
+and tactile preview rendering but is **never modified**.  Any raw/calibrated
+parquet columns are expected to have been written during recording.
 
-Output per recording:
-    rgb.mp4              - H.264 at nominal FPS
-    preview_glove.mp4    - H.264 pressure heatmap + bend bars (HOT colormap)
-    preview_all.mp4      - composite (mono stereo + RGB + glove) for quick inspection
-    video_meta.json      - absolute start/end timestamps, fps, stream info
+Calibration behavior:
+    - Default: auto-load ``<episode>/calib.json`` when present.
+    - Override: pass ``--calibration /path/to/calibration.json``.
+    - Used only for glove preview rendering: tactile baseline zeroing and
+      bend scaling. RGB/video timing/raw parquet data are not changed.
+
+Output per episode:
+    rgb.mp4              - RGB image sequence encoded as H.264 at target FPS
+    preview_glove.mp4    - pressure heatmap + bend bars (raw or calibrated)
+    preview_all.mp4      - composite mono stereo + RGB + glove preview
+    video_meta.json      - timestamps, FPS, streams, calibration metadata
 
 Usage:
 
-    # Record an episode (writes images + parquet directly to disk)
-    python multimodal_app.py grasp_cup_01 --glove-port-lh /dev/ttyACM0
+    # Convert in-place using episode-local calib.json if available
+    python post_processing/convert_to_video.py dataset/Sample_Dataset2/water1
 
-    # Convert to videos in-place (writes videos alongside images)
-    python post_processing/convert_to_video.py dataset/recording_xxx --calibration calibrations/alice.json
-
-    # Optional: specify fps and quality
-    python post_processing/convert_to_video.py dataset/recording_xxx --fps 30 --crf 15 --calibration calibrations/alice.json
+    # Optional: override calibration, FPS, and quality
+    python post_processing/convert_to_video.py dataset/Sample_Dataset2/water1 \
+        --calibration calibrations/alice.json --fps 30 --crf 15
 
 Dependencies:
     Python packages: numpy, opencv-python, pyarrow, tqdm
@@ -612,7 +616,7 @@ def encode_tactile_preview(
     """Encode a tactile preview video from parquet data.
 
     Renders pressure heatmap (COLORMAP_HOT) + bend bars per hand,
-    matching preview.py's layout.  When *calibration* is provided,
+    matching the app preview layout.  When *calibration* is provided,
     tactile values are zeroed and bend bars scaled to 0.0-1.0.
     """
     # Render first frame to get dimensions
@@ -621,7 +625,7 @@ def encode_tactile_preview(
     )
     h, w = first_frame.shape[:2]
 
-    label = "    Glove calibrated"
+    label = "    Glove calibrated" if calibration else "    Glove raw"
     with _pipe_to_ffmpeg(w, h, fps, crf, output_file) as write_frame:
         write_frame(first_frame)
         for i in tqdm(
@@ -717,7 +721,7 @@ def encode_composite_preview(
     total_h = total_h + (total_h % 2)
     top_w = top_w + (top_w % 2)
 
-    label = "    Calibrated composite"
+    label = "    Calibrated composite" if calibration else "    Raw composite"
     with _pipe_to_ffmpeg(top_w, total_h, fps, crf, output_file) as write_frame:
         for i in tqdm(range(preview_frames), desc=label, unit="frame"):
             file_idx = start_number + i
@@ -1064,7 +1068,8 @@ def main() -> None:
         )
         sys.exit(1)
 
-    # Load calibration (auto-detect from episode folder or use override)
+    # Load calibration for preview rendering only. Prefer explicit override;
+    # otherwise auto-detect the episode-local calib.json written at record time.
     calibration = None
     if args.calibration:
         cal_file = Path(args.calibration)
