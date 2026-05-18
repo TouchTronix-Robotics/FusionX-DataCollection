@@ -178,4 +178,18 @@ with GloveReader("/dev/ttyUSB0", hand="rh") as glove:
 
 Use `COM3`, `COM4`, etc. for Windows serial ports. Use `/dev/ttyUSB*` for the wireless dongle and `/dev/ttyACM*` for wired USB on Linux. The default baud rate is `921600`; supported hand labels are `"lh"` and `"rh"`.
 
+Example scripts are available under `examples/`:
+
+```bash
+python examples/sdk_read_one_frame.py /dev/ttyUSB0 --hand rh
+python examples/sdk_stream_glove.py /dev/ttyUSB0 --hand rh --show-fps
+```
+
+On Windows, replace the serial port with a COM port, for example:
+
+```powershell
+python examples\sdk_read_one_frame.py COM3 --hand rh
+python examples\sdk_stream_glove.py COM3 --hand rh --show-fps
+```
+
 See [Tactile Glove SDK API](docs/tactile-glove-sdk-api.md) for the full public API and data shapes.
