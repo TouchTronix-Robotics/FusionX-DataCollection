@@ -12,6 +12,49 @@ Grab the latest release from the [Releases](https://github.com/TouchTronix-Robot
 
 A valid license key is required on first launch.
 
+## Tactile Glove Python SDK
+
+The Releases page may also include Python wheel assets named `tactile_glove_sdk-*.whl` for projects that need to read tactile glove data directly from Python. The SDK is provided as a packaged Python wheel with the public `tactile_glove` API and type information.
+
+Choose the wheel that matches your operating system and Python version. For example, Python 3.12 wheels are named like:
+
+```text
+tactile_glove_sdk-0.1.0-cp312-cp312-linux_x86_64.whl
+tactile_glove_sdk-0.1.0-cp312-cp312-win_amd64.whl
+```
+
+Ubuntu install example:
+
+```bash
+python3.12 -m venv ~/glove
+source ~/glove/bin/activate
+python3 -m pip install tactile_glove_sdk-0.1.0-cp312-cp312-linux_x86_64.whl
+```
+
+Windows PowerShell install example:
+
+```powershell
+py -3.12 -m venv glove
+.\glove\Scripts\Activate.ps1
+python -m pip install tactile_glove_sdk-0.1.0-cp312-cp312-win_amd64.whl
+```
+
+Basic Python usage:
+
+```python
+from tactile_glove import GloveReader
+
+with GloveReader("/dev/ttyUSB0", hand="rh") as glove:
+    frame = glove.read_frame()
+    if frame is not None and frame.tactile is not None:
+        print(frame.tactile.finger_pressure["thumb"])
+        print(frame.imu.quaternion if frame.imu is not None else None)
+```
+
+Use `COM3`, `COM4`, etc. for Windows serial ports. Use `/dev/ttyUSB*` for the wireless dongle and `/dev/ttyACM*` for wired USB on Linux. The default baud rate is `921600`; supported hand labels are `"lh"` and `"rh"`.
+
+See [Tactile Glove SDK API](docs/tactile-glove-sdk-api.md) for the full public API and data shapes.
+
 ## Linux Setup
 
 ### OAK Camera USB Permissions
