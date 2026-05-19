@@ -1,12 +1,12 @@
 # Tactile Glove Python SDK
 
-Use the Python SDK release when you want to read tactile glove data directly from Python.
+Use the Python SDK package when you want to read tactile glove data directly from Python.
 
-Download pre-built wheel assets from the [Releases](https://github.com/TouchTronix-Robotics/FusionX-DataCollection/releases) page.
+The Python SDK wheel is provided separately on request. After you receive the wheel file, use the instructions below to install it into your Python environment.
 
-## Release assets
+## SDK package
 
-- `tactile_glove_sdk-*.whl` — packaged Python wheel for the public `tactile_glove` API
+- `tactile_glove_sdk-*.whl` — packaged Python wheel for the documented `tactile_glove` API
 
 Choose the wheel that matches your operating system and Python version. For example, Python 3.12 wheels are named like:
 
