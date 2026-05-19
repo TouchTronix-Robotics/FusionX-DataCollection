@@ -14,14 +14,15 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
         description="Diagnose tactile glove serial connectivity and SDK parsing."
     )
     parser.add_argument(
-        "--port",
-        required=True,
+        "port",
+        nargs="?",
+        default="/dev/ttyUSB0",
         help="Serial device path, e.g. /dev/ttyUSB0, /dev/ttyACM0, or COM3",
     )
     parser.add_argument(
         "--hand",
         choices=("lh", "rh"),
-        required=True,
+        default="lh",
         help="Hand label: lh for left hand, rh for right hand",
     )
     parser.add_argument(

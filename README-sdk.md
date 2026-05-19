@@ -59,7 +59,7 @@ python examples/sdk_stream_glove.py /dev/ttyUSB0 --hand rh --show-fps
 # Optional: override the default 921600 baud rate if your device is configured differently.
 python examples/sdk_stream_glove.py /dev/ttyUSB0 --hand rh --baudrate 115200 --show-fps
 # Diagnose serial connectivity and SDK parsing.
-python examples/test_glove.py --port /dev/ttyUSB0 --hand rh
+python examples/test_glove.py /dev/ttyUSB0 --hand rh
 ```
 
 The diagnostic script prints raw byte counts, glove frame header counts, parsed SDK frame counts, and troubleshooting hints.
