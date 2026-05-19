@@ -23,6 +23,12 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
         help="Hand label: lh for left hand, rh for right hand",
     )
     parser.add_argument(
+        "--baudrate",
+        type=int,
+        default=921600,
+        help="Serial baud rate. Default: 921600",
+    )
+    parser.add_argument(
         "--show-fps",
         action="store_true",
         help="Display the instantaneous frame rate in frames per second",
@@ -72,7 +78,12 @@ def format_frame(
 def main(argv: Sequence[str] | None = None) -> None:
     args = parse_args(argv)
     fps_meter = FrameRateMeter() if args.show_fps else None
-    with GloveReader(args.port, hand=args.hand) as glove:
+    print(
+        f"Opening {args.port} at {args.baudrate} baud for {args.hand.upper()}; "
+        "waiting for glove frames...",
+        flush=True,
+    )
+    with GloveReader(args.port, hand=args.hand, baudrate=args.baudrate) as glove:
         for frame in glove.stream():
             fps = fps_meter.tick() if fps_meter is not None else None
             print(format_frame(frame, hand=args.hand, fps=fps))

@@ -20,6 +20,12 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
         default="lh",
         help="Hand label: lh for left hand, rh for right hand",
     )
+    parser.add_argument(
+        "--baudrate",
+        type=int,
+        default=921600,
+        help="Serial baud rate. Default: 921600",
+    )
     return parser.parse_args(argv)
 
 
@@ -40,7 +46,12 @@ def format_frame(frame: GloveFrame, hand: str | None = None) -> str:
 
 def main(argv: Sequence[str] | None = None) -> None:
     args = parse_args(argv)
-    with GloveReader(args.port, hand=args.hand) as glove:
+    print(
+        f"Opening {args.port} at {args.baudrate} baud for {args.hand.upper()}; "
+        "waiting for glove frames...",
+        flush=True,
+    )
+    with GloveReader(args.port, hand=args.hand, baudrate=args.baudrate) as glove:
         while True:
             frame = glove.read_frame()
             if frame is not None:

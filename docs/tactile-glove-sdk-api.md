@@ -4,7 +4,7 @@ Python package: `tactile_glove`
 
 The Tactile Glove SDK reads tactile glove data from a serial port and returns structured Python objects for tactile pressure, bend, and IMU orientation data.
 
-Install the platform-specific wheel from the GitHub Releases page before using this API.
+Install the platform-specific wheel provided by TouchTronix before using this API.
 
 ## Supported runtime
 
