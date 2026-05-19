@@ -29,10 +29,6 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
-def format_waiting_message(port: str, hand: str, baudrate: int) -> str:
-    return f"Opening {port} at {baudrate} baud for {hand.upper()}; waiting for glove frames..."
-
-
 def format_frame(frame: GloveFrame, hand: str | None = None) -> str:
     sensor_name = hand.upper() if hand is not None else getattr(frame, "sensor_type_name", "glove")
     lines = [f"[{sensor_name}]"]
@@ -50,7 +46,11 @@ def format_frame(frame: GloveFrame, hand: str | None = None) -> str:
 
 def main(argv: Sequence[str] | None = None) -> None:
     args = parse_args(argv)
-    print(format_waiting_message(args.port, hand=args.hand, baudrate=args.baudrate), flush=True)
+    print(
+        f"Opening {args.port} at {args.baudrate} baud for {args.hand.upper()}; "
+        "waiting for glove frames...",
+        flush=True,
+    )
     with GloveReader(args.port, hand=args.hand, baudrate=args.baudrate) as glove:
         while True:
             frame = glove.read_frame()

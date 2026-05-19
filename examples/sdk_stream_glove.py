@@ -36,10 +36,6 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
-def format_waiting_message(port: str, hand: str, baudrate: int) -> str:
-    return f"Opening {port} at {baudrate} baud for {hand.upper()}; waiting for glove frames..."
-
-
 class FrameRateMeter:
     def __init__(self, clock: Callable[[], float] = time.monotonic) -> None:
         self._clock = clock
@@ -82,7 +78,11 @@ def format_frame(
 def main(argv: Sequence[str] | None = None) -> None:
     args = parse_args(argv)
     fps_meter = FrameRateMeter() if args.show_fps else None
-    print(format_waiting_message(args.port, hand=args.hand, baudrate=args.baudrate), flush=True)
+    print(
+        f"Opening {args.port} at {args.baudrate} baud for {args.hand.upper()}; "
+        "waiting for glove frames...",
+        flush=True,
+    )
     with GloveReader(args.port, hand=args.hand, baudrate=args.baudrate) as glove:
         for frame in glove.stream():
             fps = fps_meter.tick() if fps_meter is not None else None
