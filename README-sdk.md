@@ -60,7 +60,7 @@ python examples/sdk_stream_glove.py /dev/ttyUSB0 --hand rh --show-fps
 python examples/test_glove.py /dev/ttyUSB0 --hand rh
 ```
 
-The diagnostic script prints raw byte counts, glove frame header counts, parsed SDK frame counts, and troubleshooting hints.
+The diagnostic script prints raw byte counts, glove frame header counts, parsed SDK frame counts, and troubleshooting hints. It also writes the raw serial bytes it received to `glove_raw_bytes.txt` as a hex dump. Use `--raw-output <path>` to choose a different output file.
 
 ## Ubuntu serial-port access
 
