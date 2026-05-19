@@ -76,6 +76,7 @@ python --version
 ls -l /dev/ttyUSB* /dev/ttyACM* 2>/dev/null
 
 # Confirm the current user is in the serial-port access group.
+# On Ubuntu this is usually dialout; on some Linux distributions it may be uucp.
 groups
 
 # Replace /dev/ttyUSB0 with the actual glove port from the ls command above.
