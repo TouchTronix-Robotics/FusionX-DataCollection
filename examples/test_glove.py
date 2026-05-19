@@ -1,6 +1,7 @@
 import argparse
 import time
 from collections.abc import Sequence
+from pathlib import Path
 
 import serial
 
@@ -37,6 +38,11 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
         default=10.0,
         help="How long to listen during each diagnostic phase. Default: 10",
     )
+    parser.add_argument(
+        "--raw-output",
+        default="glove_raw_bytes.txt",
+        help="Text file for the raw serial byte hex dump. Default: glove_raw_bytes.txt",
+    )
     return parser.parse_args(argv)
 
 
@@ -49,6 +55,7 @@ def format_summary(
     raw_bytes: int,
     header_count: int,
     parsed_frames: int,
+    raw_output: str,
 ) -> str:
     return "\n".join(
         [
@@ -60,6 +67,7 @@ def format_summary(
             f"Raw bytes received: {raw_bytes}",
             f"Glove frame headers found: {header_count}",
             f"Parsed SDK frames: {parsed_frames}",
+            f"Raw byte log: {raw_output}",
         ]
     )
 
@@ -85,7 +93,19 @@ def print_hints(raw_bytes: int, header_count: int, parsed_frames: int) -> None:
         print("Glove stream looks healthy: raw bytes and parsed SDK frames were received.")
 
 
-def collect_raw_bytes(port: str, baudrate: int, seconds: float) -> tuple[int, int]:
+def write_raw_bytes_report(path: str | Path, data: bytes) -> None:
+    lines = [
+        "Raw glove serial bytes",
+        f"Total bytes: {len(data)}",
+        "Hex dump:",
+    ]
+    for offset in range(0, len(data), 16):
+        chunk = data[offset : offset + 16]
+        lines.append(f"{offset:08x}  {chunk.hex(' ')}")
+    Path(path).write_text("\n".join(lines) + "\n")
+
+
+def collect_raw_bytes(port: str, baudrate: int, seconds: float) -> tuple[bytes, int]:
     print(f"[1/2] Listening for raw serial bytes on {port} at {baudrate} baud...")
     with serial.Serial(port, baudrate=baudrate, timeout=0.1) as ser:
         deadline = time.time() + seconds
@@ -99,9 +119,10 @@ def collect_raw_bytes(port: str, baudrate: int, seconds: float) -> tuple[int, in
                 buffer.extend(data)
                 print(f"  received {len(data)} bytes, total={total}", flush=True)
             time.sleep(0.05)
-    header_count = bytes(buffer).count(FRAME_HEADER)
-    print(f"  first bytes: {bytes(buffer[:64]).hex(' ')}")
-    return total, header_count
+    raw_data = bytes(buffer)
+    header_count = raw_data.count(FRAME_HEADER)
+    print(f"  first bytes: {raw_data[:64].hex(' ')}")
+    return raw_data, header_count
 
 
 def collect_sdk_frames(port: str, hand: str, baudrate: int, seconds: float) -> int:
@@ -121,7 +142,9 @@ def collect_sdk_frames(port: str, hand: str, baudrate: int, seconds: float) -> i
 
 def main(argv: Sequence[str] | None = None) -> None:
     args = parse_args(argv)
-    raw_bytes, header_count = collect_raw_bytes(args.port, args.baudrate, args.seconds)
+    raw_data, header_count = collect_raw_bytes(args.port, args.baudrate, args.seconds)
+    write_raw_bytes_report(args.raw_output, raw_data)
+    print(f"  wrote raw byte log: {args.raw_output}")
     parsed_frames = collect_sdk_frames(args.port, args.hand, args.baudrate, args.seconds)
     print()
     print(
@@ -130,13 +153,14 @@ def main(argv: Sequence[str] | None = None) -> None:
             hand=args.hand,
             baudrate=args.baudrate,
             elapsed=args.seconds,
-            raw_bytes=raw_bytes,
+            raw_bytes=len(raw_data),
             header_count=header_count,
             parsed_frames=parsed_frames,
+            raw_output=args.raw_output,
         )
     )
     print()
-    print_hints(raw_bytes, header_count, parsed_frames)
+    print_hints(len(raw_data), header_count, parsed_frames)
 
 
 if __name__ == "__main__":
