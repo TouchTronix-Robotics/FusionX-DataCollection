@@ -185,6 +185,8 @@ python examples/sdk_read_one_frame.py /dev/ttyUSB0 --hand rh
 python examples/sdk_stream_glove.py /dev/ttyUSB0 --hand rh --show-fps
 # Optional: override the default 921600 baud rate if your device is configured differently.
 python examples/sdk_stream_glove.py /dev/ttyUSB0 --hand rh --baudrate 115200 --show-fps
+# Diagnose serial connectivity and SDK parsing.
+python examples/test_glove.py --port /dev/ttyUSB0 --hand rh
 ```
 
 On Windows, replace the serial port with a COM port, for example:
