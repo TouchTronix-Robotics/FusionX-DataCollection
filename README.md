@@ -189,6 +189,38 @@ python examples/sdk_stream_glove.py /dev/ttyUSB0 --hand rh --baudrate 115200 --s
 python examples/test_glove.py --port /dev/ttyUSB0 --hand rh
 ```
 
+On Ubuntu, check serial-port access before using `sudo`. The user should be able to open the glove port from the same Python environment used to run the examples:
+
+```bash
+# Check which user and Python environment will run the SDK.
+whoami
+which python
+python --version
+
+# Confirm the glove serial device exists and note its group, usually dialout.
+ls -l /dev/ttyUSB* /dev/ttyACM* 2>/dev/null
+
+# Confirm the current user is in the serial-port access group.
+groups
+
+# Replace /dev/ttyUSB0 with the actual glove port from the ls command above.
+python - <<'PY'
+import serial
+
+port = "/dev/ttyUSB0"
+with serial.Serial(port, baudrate=921600, timeout=1.0):
+    print(f"Serial access OK: opened {port}")
+PY
+```
+
+If opening the port fails with `Permission denied`, add the user to `dialout`, then log out and back in before retrying:
+
+```bash
+sudo usermod -aG dialout "$USER"
+```
+
+Avoid `sudo python ...` for normal SDK use because it can switch to root's Python environment instead of the activated virtual environment.
+
 On Windows, replace the serial port with a COM port, for example:
 
 ```powershell
