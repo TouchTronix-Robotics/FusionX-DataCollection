@@ -6,5 +6,5 @@ Download standalone app assets from the [Releases](https://github.com/TouchTroni
 
 Choose the instructions for the package you are using:
 
-- [Standalone app README](README-standalone-app.md) — ready-to-run recording GUI, touch GUI, data transfer, and offline post-processing.
+- [Standalone app README](README-standalone-app.md) — ready-to-run recording GUI, touch GUI, CLI recording, one-time miniPC setup, and offline post-processing.
 - [Python SDK README](README-sdk.md) — install a provided `tactile_glove` wheel package and read tactile glove data directly from Python.

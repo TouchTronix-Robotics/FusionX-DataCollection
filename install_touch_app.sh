@@ -2,7 +2,7 @@
 # Install the Touchtronix Touch AppImage as an Ubuntu/GNOME app launcher and dock shortcut.
 # Usage:
 #   mkdir -p ~/Touchtronix
-#   # Put this script and touchtronix-touch-*.AppImage in ~/Touchtronix
+#   # Put this script and touchtronix-fusionX-miniPC-*-linux-x86_64.AppImage in ~/Touchtronix
 #   cd ~/Touchtronix
 #   chmod +x install_touch_app.sh
 #   ./install_touch_app.sh
@@ -14,11 +14,11 @@ DESKTOP_ID="touchtronix-touch.desktop"
 DESKTOP_FILE="$HOME/.local/share/applications/$DESKTOP_ID"
 ICON_FILE="$APP_DIR/touchtronix-touch.svg"
 
-APPIMAGE="$(find "$APP_DIR" -maxdepth 1 -type f -iname '*touch*.AppImage' -printf '%T@ %p\n' 2>/dev/null | sort -nr | head -n1 | cut -d' ' -f2-)"
+APPIMAGE="$(find "$APP_DIR" -maxdepth 1 -type f \( -iname 'touchtronix-fusionX-miniPC-*.AppImage' -o -iname '*touch*.AppImage' \) -printf '%T@ %p\n' 2>/dev/null | sort -nr | head -n1 | cut -d' ' -f2-)"
 
 if [ -z "$APPIMAGE" ]; then
-    echo "Error: no *touch*.AppImage found in $APP_DIR"
-    echo "Download touchtronix-touch-*.AppImage and place it next to this script."
+    echo "Error: no touchtronix-fusionX-miniPC-*.AppImage found in $APP_DIR"
+    echo "Download touchtronix-fusionX-miniPC-*-linux-x86_64.AppImage and place it next to this script."
     exit 1
 fi
 

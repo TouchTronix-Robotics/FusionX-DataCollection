@@ -4,8 +4,8 @@ Convert one recorded episode from image-per-frame storage into MP4 previews.
 
 Run this standalone utility on an episode directory that contains
 ``frames.parquet`` plus optional ``rgb/``, ``mono_left/``, ``mono_right/`` image
-folders and optional ``calib.json``.  The parquet file is read for timestamps
-and tactile preview rendering but is **never modified**.  Any raw/calibrated
+folders and optional ``calib.json``. The parquet file is read for timestamps
+and tactile preview rendering but is **never modified**. Any raw/calibrated
 parquet columns are expected to have been written during recording.
 
 Calibration behavior:
@@ -480,6 +480,18 @@ def read_parquet(parquet_path: Path) -> pa.Table:
     return table
 
 
+def _read_mono_frame(rec_dir: Path, stream: str, frame_idx: int) -> np.ndarray | None:
+    """Read mono frame, supporting new JPEG and legacy PNG recordings."""
+    for ext in ("jpg", "png"):
+        frame = cv2.imread(
+            str(rec_dir / stream / f"{frame_idx:06d}.{ext}"),
+            cv2.IMREAD_GRAYSCALE,
+        )
+        if frame is not None:
+            return frame
+    return None
+
+
 def _run_ffmpeg_with_progress(cmd: list[str], n_frames: int, desc: str) -> None:
     """Run an ffmpeg command while showing a tqdm progress bar.
 
@@ -616,7 +628,7 @@ def encode_tactile_preview(
     """Encode a tactile preview video from parquet data.
 
     Renders pressure heatmap (COLORMAP_HOT) + bend bars per hand,
-    matching the app preview layout.  When *calibration* is provided,
+    matching the live app preview layout.  When *calibration* is provided,
     tactile values are zeroed and bend bars scaled to 0.0-1.0.
     """
     # Render first frame to get dimensions
@@ -682,10 +694,7 @@ def encode_composite_preview(
     # Compute mono row dimensions
     mono_row_h = 0
     if has_mono:
-        first_mono = cv2.imread(
-            str(rec_dir / "mono_left" / f"{start_number:06d}.png"),
-            cv2.IMREAD_GRAYSCALE,
-        )
+        first_mono = _read_mono_frame(rec_dir, "mono_left", start_number)
         if first_mono is not None:
             mono_orig_h, mono_orig_w = first_mono.shape[:2]
             # Each mono panel is half the top width
@@ -731,14 +740,8 @@ def encode_composite_preview(
             # Mono stereo row (top)
             if has_mono:
                 mono_panel_w = top_w // 2
-                ml = cv2.imread(
-                    str(rec_dir / "mono_left" / f"{file_idx:06d}.png"),
-                    cv2.IMREAD_GRAYSCALE,
-                )
-                mr = cv2.imread(
-                    str(rec_dir / "mono_right" / f"{file_idx:06d}.png"),
-                    cv2.IMREAD_GRAYSCALE,
-                )
+                ml = _read_mono_frame(rec_dir, "mono_left", file_idx)
+                mr = _read_mono_frame(rec_dir, "mono_right", file_idx)
                 ml_resized = cv2.resize(ml, (mono_panel_w, mono_row_h))
                 mr_resized = cv2.resize(mr, (mono_panel_w, mono_row_h))
                 ml_bgr = cv2.cvtColor(ml_resized, cv2.COLOR_GRAY2BGR)
@@ -864,22 +867,6 @@ def write_video_meta(
     meta_path.write_text(json.dumps(meta, indent=2))
 
 
-def _subsample_indices(timestamps: np.ndarray, target_fps: int) -> np.ndarray:
-    """Compute indices to subsample a high-rate signal to target_fps.
-
-    Uses nearest-neighbor selection on a uniform grid spanning the
-    recording duration, so the output plays back at real-time speed
-    when encoded at target_fps.
-    """
-    t0 = timestamps[0]
-    duration = timestamps[-1] - t0
-    n_out = max(1, int(round(duration * target_fps)))
-    target_times = np.linspace(t0, timestamps[-1], n_out)
-    indices = np.searchsorted(timestamps, target_times, side="right") - 1
-    indices = np.clip(indices, 0, len(timestamps) - 1)
-    return indices
-
-
 def process_recording(
     rec_dir: Path,
     target_dir: Path,
@@ -892,13 +879,15 @@ def process_recording(
     Encodes at constant ``fps``.  The original ``frames.parquet`` is read
     for metadata and tactile rendering but is **never modified** — all
     parquet columns (raw + calibrated) are written at recording time.
-
-    For glove-only recordings (no camera images), the full-rate glove data
-    is subsampled to ``fps`` for the video preview.
     """
     parquet_path = rec_dir / "frames.parquet"
     if not parquet_path.exists():
-        print(f"  WARNING: No frames.parquet in {rec_dir}, skipping")
+        if (rec_dir / "gloves.parquet").exists():
+            print(
+                f"  WARNING: {rec_dir} is glove-only; no frames.parquet to convert"
+            )
+        else:
+            print(f"  WARNING: No frames.parquet in {rec_dir}, skipping")
         return
 
     # Skip if already converted (video_meta.json exists)
@@ -918,24 +907,8 @@ def process_recording(
 
     has_rgb = (rec_dir / "rgb").exists() and any((rec_dir / "rgb").iterdir())
     has_mono = (rec_dir / "mono_left").exists() and (rec_dir / "mono_right").exists()
-    is_glove_only = not has_rgb
-
-    # For glove-only recordings, subsample to target fps for video encoding
-    # but keep the full-rate table for the output parquet.
-    sub_idx = None  # indices into full-rate table used for video frames
-    video_table = table  # table used for video encoding (may be subsampled)
+    video_table = table
     n_video_frames = n_frames
-    if is_glove_only and n_frames > 1:
-        duration_s = timestamps[-1] - timestamps[0]
-        data_fps = (n_frames - 1) / duration_s if duration_s > 0 else fps
-        if data_fps > fps * 1.5:  # only subsample if significantly faster
-            sub_idx = _subsample_indices(timestamps, fps)
-            n_video_frames = len(sub_idx)
-            video_table = table.take(sub_idx)
-            print(
-                f"  > Subsampling {n_frames} frames ({data_fps:.0f} Hz) "
-                f"-> {n_video_frames} frames ({fps} Hz) for video"
-            )
 
     # Detect start number from first file on disk (handles partial recordings)
     start_number = 0
@@ -1014,7 +987,7 @@ def process_recording(
 
 def parse_args():
     parser = argparse.ArgumentParser(
-        description="Convert a TouchTronix image-per-frame episode to MP4 preview videos."
+        description="Convert one TouchTronix episode folder to MP4 preview videos."
     )
     parser.add_argument(
         "source",
@@ -1061,11 +1034,17 @@ def main() -> None:
         sys.exit(1)
 
     if not (args.source / "frames.parquet").exists():
-        print(
-            f"ERROR: No frames.parquet in {args.source}. "
-            "Pass an episode folder, not a dataset folder.",
-            file=sys.stderr,
-        )
+        if (args.source / "gloves.parquet").exists():
+            print(
+                f"ERROR: {args.source} is glove-only and has no frames.parquet.",
+                file=sys.stderr,
+            )
+        else:
+            print(
+                f"ERROR: No frames.parquet in {args.source}. "
+                "Pass an episode folder, not a dataset folder.",
+                file=sys.stderr,
+            )
         sys.exit(1)
 
     # Load calibration for preview rendering only. Prefer explicit override;

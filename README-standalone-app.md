@@ -6,9 +6,12 @@ Download pre-built assets from the [Releases](https://github.com/TouchTronix-Rob
 
 ## Release assets
 
-- **Linux desktop**: `touchtronix-datacollection-*.AppImage` — full desktop GUI
-- **Linux miniPC / touchscreen**: `touchtronix-touch-*.AppImage` — fullscreen touch GUI
-- **Windows**: `.zip` — extract and run `touchtronix-datacollection.exe`
+- **Linux desktop**: `touchtronix-fusionX-PC-*-linux-x86_64.AppImage` — full desktop GUI
+- **Linux miniPC / touchscreen**: `touchtronix-fusionX-miniPC-*-linux-x86_64.AppImage` — fullscreen touch GUI
+- **Linux CLI recorder**: `touchtronix-fusionX-cli-*-linux-x86_64.AppImage` — terminal recording
+- **Windows desktop**: `touchtronix-fusionX-PC-*-windows-x86_64.zip` — full desktop GUI
+- **Windows miniPC / touchscreen**: `touchtronix-fusionX-miniPC-*-windows-x86_64.zip` — fullscreen touch GUI
+- **Windows CLI recorder**: `touchtronix-fusionX-cli-*-windows-x86_64.zip` — terminal recording
 
 A valid license key is required on first launch.
 
@@ -43,10 +46,10 @@ mkdir -p ~/Touchtronix
 mv ~/Downloads/touchtronix-*.AppImage ~/Touchtronix/
 cd ~/Touchtronix
 chmod +x touchtronix-*.AppImage
-./touchtronix-datacollection-*.AppImage
+./touchtronix-fusionX-PC-*-linux-x86_64.AppImage
 ```
 
-To install the touch AppImage into the Ubuntu app menu and pin it to the GNOME dock, put `install_touch_app.sh` and `touchtronix-touch-*.AppImage` in `~/Touchtronix`, then run:
+To install the touch AppImage into the Ubuntu app menu and pin it to the GNOME dock, put `install_touch_app.sh` and `touchtronix-fusionX-miniPC-*-linux-x86_64.AppImage` in `~/Touchtronix`, then run:
 
 ```bash
 cd ~/Touchtronix
@@ -73,16 +76,57 @@ sudo apt install libfuse2
 
 ## Windows setup
 
-Extract the zip and run `touchtronix-datacollection.exe`. OAK drivers are bundled.
+Extract `touchtronix-fusionX-PC-*-windows-x86_64.zip` and run `touchtronix-fusionX-PC.exe`. For the fullscreen touch GUI, extract `touchtronix-fusionX-miniPC-*-windows-x86_64.zip` and run `touchtronix-fusionX-miniPC.exe`. OAK drivers are bundled.
 
 If the wireless glove dongle is not detected, install the [CH340 USB-serial driver](https://www.wch-ic.com/downloads/CH341SER_EXE.html).
 
 ## Using the app
 
 1. **Calibration tab** — select LH/RH glove serial ports, enter a username, click **Start Calibration**, and follow the on-screen prompts. The profile is saved under `~/Touchtronix/calibrations/<user>.json` when using the recommended AppImage layout.
-2. **Recording tab** — select serial ports, pick an output directory and episode name, optionally load a calibration file, click **Start Preview** → **Start Recording**, then press **Stop Recording** to save.
+2. **Recording tab** — select serial ports, pick an output directory and episode name, optionally load a calibration file, click **Start Preview** → **Start Recording**, then press **Stop Recording** to save. If an external keyboard is connected, you can also press the space bar to start and stop recording.
 
 Recordings are written as per-frame images plus a Parquet sensor log.
+
+## Headless CLI recording
+
+The CLI release asset records directly from a terminal and writes the same dataset format as the GUI. A valid license must already be installed; launch the GUI once to enter the license key before using the CLI.
+
+Linux:
+
+```bash
+chmod +x touchtronix-fusionX-cli-*-linux-x86_64.AppImage
+./touchtronix-fusionX-cli-*-linux-x86_64.AppImage test1 --headless \
+  --glove-port-lh /dev/ttyACM1 \
+  --glove-port-rh /dev/ttyACM0 \
+  --calibration ~/Touchtronix/calibrations/user.json \
+  --show-metrics
+```
+
+Windows:
+
+```powershell
+.\touchtronix-fusionX-cli.exe test1 --headless `
+  --glove-port-lh COM4 `
+  --glove-port-rh COM5 `
+  --calibration C:\Users\you\Touchtronix\calibrations\user.json `
+  --show-metrics
+```
+
+Use `Ctrl+C` to stop and save the recording.
+
+Common options:
+
+- `episode` — optional episode folder name. If omitted, the app uses `recording_YYYYMMDD_HHMMSS`.
+- `-o`, `--output-dir` — parent dataset directory. The default is `dataset`.
+- `--headless` — start recording immediately without a preview window.
+- `--glove-port-lh`, `--glove-port-rh` — left and right glove serial ports. Pass the ports you want recorded.
+- `--calibrate USER` — run glove user calibration and save `calibrations/USER.json`.
+- `--calibration FILE` — load an existing user calibration JSON.
+- `--force-calibration FILE` — load glove force or per-pixel pressure calibration.
+- `--jpeg-quality N` — RGB JPEG quality. The default is `95`.
+- `--show-metrics` — print FPS and latency metrics about once per second.
+
+If no OAK camera is detected, the CLI runs in glove-only mode. If `--headless` is omitted, the CLI opens the legacy preview window; press `s` to start recording and `q` to stop.
 
 ## Standalone post-processing
 
@@ -106,25 +150,27 @@ Outputs are written next to `frames.parquet`:
 
 Dependencies: Python 3.10+, `numpy`, `opencv-python`, `pyarrow`, `tqdm`, plus system `ffmpeg` and `ffprobe` on `PATH` with H.264/libx264 support. No OAK camera, DepthAI, PySide, serial, or license dependencies are required for offline conversion.
 
-## Data transfer from miniPC
+## One-time miniPC configuration
 
-The touch AppImage starts a web download page automatically. Put your laptop/desktop and the miniPC on the same Wi-Fi or LAN, then open:
+The repository includes `setup-miniPC.sh` for Ubuntu/GNOME miniPC touchscreen deployments. Run it once as the logged-in desktop user after the touchscreen is connected:
 
-```text
-http://touchtronix.local:8080
+```bash
+cd FusionX-DataCollection
+chmod +x setup-miniPC.sh
+./setup-miniPC.sh
 ```
 
-If that address does not load, use the miniPC IP address shown at the bottom of the touch GUI:
+Do not run the script with `sudo`; it asks for sudo only for the system-level steps. By default it targets display output `DSI-1`, applies transform `3`, and sets the screen blank timeout to `120` seconds. Override those defaults when needed:
 
-```text
-http://<miniPC-ip>:8080
+```bash
+OUTPUT=HDMI-1 TRANSFORM=1 IDLE_DELAY_SECONDS=300 ./setup-miniPC.sh
 ```
 
-The page lists recorded episodes from `~/Touchtronix/dataset/` and lets you download each episode as a ZIP file.
+The script configures the miniPC for kiosk-style recording:
 
-Troubleshooting:
-
-- Make sure both computers are on the same network.
-- If using Wi-Fi, disable guest/client isolation on the router.
-- If `touchtronix.local` fails, use the raw IP address.
-- Allow port `8080` through any firewall on the miniPC.
+- Rotates the target display while preserving the active monitor layout.
+- Maps detected touchscreens to the target display.
+- Locks GNOME touchscreen orientation and disables the rotate-monitor shortcut.
+- Sets the screen blank timeout, disables the lock screen, and disables automatic suspend.
+- Masks the accelerometer auto-rotation service.
+- Copies the saved monitor layout and touchscreen mapping to the GDM login screen when available.
