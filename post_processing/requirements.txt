@@ -1,3 +1,4 @@
+mcap>=1.4.0
 numpy>=1.24
 opencv-python>=4.8
 pyarrow>=14.0

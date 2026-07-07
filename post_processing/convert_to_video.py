@@ -4,12 +4,13 @@ Convert one recorded episode from image-per-frame storage into MP4 previews.
 
 Run this standalone utility on an episode directory that contains
 ``frames.parquet`` plus optional ``rgb/``, ``mono_left/``, ``mono_right/`` image
-folders and optional ``calib.json``. The parquet file is read for timestamps
-and tactile preview rendering but is **never modified**. Any raw/calibrated
-parquet columns are expected to have been written during recording.
+folders and optional ``calib.json`` or ``user_calibration.json``. The parquet
+file is read for timestamps and tactile preview rendering but is **never
+modified**. Any raw/calibrated parquet columns are expected to have been written
+during recording or reconstructed from MCAP by ``post_processing/mcap_exporter.py``.
 
 Calibration behavior:
-    - Default: auto-load ``<episode>/calib.json`` when present.
+    - Default: auto-load ``<episode>/calib.json`` or ``user_calibration.json``.
     - Override: pass ``--calibration /path/to/calibration.json``.
     - Used only for glove preview rendering: tactile baseline zeroing and
       bend scaling. RGB/video timing/raw parquet data are not changed.
@@ -22,7 +23,7 @@ Output per episode:
 
 Usage:
 
-    # Convert in-place using episode-local calib.json if available
+    # Convert in-place using episode-local calibration if available
     python post_processing/convert_to_video.py dataset/Sample_Dataset2/water1
 
     # Optional: override calibration, FPS, and quality
@@ -1011,7 +1012,10 @@ def parse_args():
         type=str,
         default=None,
         metavar="FILE",
-        help="Calibration JSON file (default: auto-detect calib.json in episode folder)",
+        help=(
+            "Calibration JSON file (default: auto-detect calib.json or "
+            "user_calibration.json in episode folder)"
+        ),
     )
     return parser.parse_args()
 
@@ -1048,12 +1052,23 @@ def main() -> None:
         sys.exit(1)
 
     # Load calibration for preview rendering only. Prefer explicit override;
-    # otherwise auto-detect the episode-local calib.json written at record time.
+    # otherwise auto-detect episode-local calibration files written at record
+    # time or reconstructed from MCAP export.
     calibration = None
     if args.calibration:
         cal_file = Path(args.calibration)
     else:
-        cal_file = args.source / "calib.json"
+        cal_file = next(
+            (
+                candidate
+                for candidate in (
+                    args.source / "calib.json",
+                    args.source / "user_calibration.json",
+                )
+                if candidate.is_file()
+            ),
+            args.source / "calib.json",
+        )
 
     if cal_file.is_file():
         calibration = GloveCalibration.load(cal_file)

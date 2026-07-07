@@ -49,14 +49,6 @@ chmod +x touchtronix-*.AppImage
 ./touchtronix-fusionX-PC-*-linux-x86_64.AppImage
 ```
 
-To install the touch AppImage into the Ubuntu app menu and pin it to the GNOME dock, put `install_touch_app.sh` and `touchtronix-fusionX-miniPC-*-linux-x86_64.AppImage` in `~/Touchtronix`, then run:
-
-```bash
-cd ~/Touchtronix
-chmod +x install_touch_app.sh
-./install_touch_app.sh
-```
-
 The app stores data next to the AppImage:
 
 - `~/Touchtronix/calibrations/` — glove/user calibration JSON files
@@ -85,7 +77,9 @@ If the wireless glove dongle is not detected, install the [CH340 USB-serial driv
 1. **Calibration tab** — select LH/RH glove serial ports, enter a username, click **Start Calibration**, and follow the on-screen prompts. The profile is saved under `~/Touchtronix/calibrations/<user>.json` when using the recommended AppImage layout.
 2. **Recording tab** — select serial ports, pick an output directory and episode name, optionally load a calibration file, click **Start Preview** → **Start Recording**, then press **Stop Recording** to save. If an external keyboard is connected, you can also press the space bar to start and stop recording.
 
-Recordings are written as per-frame images plus a Parquet sensor log.
+Recordings are written as segmented MCAP raw capture files. Use the standalone
+MCAP exporter below to reconstruct per-frame image folders and Parquet sensor
+logs on an offline workstation.
 
 ## Headless CLI recording
 
@@ -130,7 +124,9 @@ If no OAK camera is detected, the CLI runs in glove-only mode. If `--headless` i
 
 ## Standalone post-processing
 
-Use the bundled utility to convert one episode folder into MP4 videos:
+Recorded episodes contain one or more `recording_*.mcap` files. First export
+those MCAP segments into image folders and Parquet logs, then convert the
+exported episode into MP4 preview videos.
 
 ```bash
 cd FusionX-DataCollection
@@ -138,17 +134,39 @@ python3 -m venv .venv
 source .venv/bin/activate
 pip install -r post_processing/requirements.txt
 sudo apt install ffmpeg  # Linux, if ffmpeg/ffprobe are not already installed
-python post_processing/convert_to_video.py /path/to/dataset/recording_xxx
+python post_processing/mcap_exporter.py /path/to/dataset/recording_xxx/recording_*.mcap \
+  -o /path/to/dataset/recording_xxx_exported
+python post_processing/convert_to_video.py /path/to/dataset/recording_xxx_exported
 ```
 
-Outputs are written next to `frames.parquet`:
+On Windows PowerShell, activate the environment with:
+
+```powershell
+.\.venv\Scripts\Activate.ps1
+python post_processing\mcap_exporter.py C:\path\to\recording_xxx\recording_*.mcap `
+  -o C:\path\to\recording_xxx_exported
+python post_processing\convert_to_video.py C:\path\to\recording_xxx_exported
+```
+
+The MCAP exporter reconstructs:
+
+- `rgb/`, `mono_left/`, `mono_right/` - per-frame image folders
+- `frames.parquet` - camera-frame table with aligned glove and OAK IMU columns
+- `gloves.parquet` - full-rate glove samples
+- `oak_imu.parquet` - full-rate OAK IMU samples
+- `user_calibration.json`, `force_calibration.json`, `camera_calibration.json` when present
+
+The video converter writes these outputs next to `frames.parquet`:
 
 - `rgb.mp4` — RGB image sequence encoded as H.264
 - `preview_glove.mp4` — tactile pressure/bend visualization
 - `preview_all.mp4` — RGB + mono stereo + glove composite preview
 - `video_meta.json` — timestamps, FPS, stream metadata
 
-Dependencies: Python 3.10+, `numpy`, `opencv-python`, `pyarrow`, `tqdm`, plus system `ffmpeg` and `ffprobe` on `PATH` with H.264/libx264 support. No OAK camera, DepthAI, PySide, serial, or license dependencies are required for offline conversion.
+Dependencies: Python 3.10+, `mcap`, `numpy`, `opencv-python`, `pyarrow`, `tqdm`,
+plus system `ffmpeg` and `ffprobe` on `PATH` with H.264/libx264 support. No OAK
+camera, DepthAI, PySide, serial, or license dependencies are required for
+offline export or video conversion.
 
 ## One-time miniPC configuration
 
