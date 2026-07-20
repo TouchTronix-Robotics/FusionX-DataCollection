@@ -19,7 +19,7 @@ A valid license key is required on first launch.
 
 Current viewer files are tracked directly in this repository rather than bundled into the application release archives:
 
-- [`touchtronixrobotics.fusionx-tactile-panel-0.2.2.foxe`](touchtronixrobotics.fusionx-tactile-panel-0.2.2.foxe) — self-contained **FusionX Tactile** panel extension.
+- [`touchtronixrobotics.fusionx-tactile-panel-0.2.3.foxe`](touchtronixrobotics.fusionx-tactile-panel-0.2.3.foxe) — self-contained **FusionX Tactile** panel extension.
 - [`fusionx_foxglove_layout.json`](fusionx_foxglove_layout.json) — canonical camera, tactile, OAK IMU, and separate LH/RH glove IMU workspace.
 
 To view a current `touchtronix.raw.v2` recording:

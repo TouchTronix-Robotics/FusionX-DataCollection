@@ -6,7 +6,7 @@ Download standalone app assets from the [Releases](https://github.com/TouchTroni
 
 Standalone Foxglove Desktop viewer files are available directly from this repository:
 
-- [`touchtronixrobotics.fusionx-tactile-panel-0.2.2.foxe`](touchtronixrobotics.fusionx-tactile-panel-0.2.2.foxe) — self-contained FusionX tactile panel extension.
+- [`touchtronixrobotics.fusionx-tactile-panel-0.2.3.foxe`](touchtronixrobotics.fusionx-tactile-panel-0.2.3.foxe) — self-contained FusionX tactile panel extension.
 - [`fusionx_foxglove_layout.json`](fusionx_foxglove_layout.json) — camera, tactile, OAK IMU, and LH/RH glove IMU workspace.
 
 Install the extension before importing the layout. Neither file requires the application source tree, Node.js, or npm.
