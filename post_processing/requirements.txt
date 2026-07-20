@@ -1,5 +1,4 @@
 mcap>=1.4.0
 numpy>=1.24
-opencv-python>=4.8
+protobuf>=7.34.1,<8
 pyarrow>=14.0
-tqdm>=4.65

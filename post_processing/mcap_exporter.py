@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """Export TouchTronix raw MCAP captures back to episode files.
 
-This reconstructs the same raw artifacts produced by the live writer:
+This derives episode artifacts from current-format MCAP recordings:
 ``rgb/``, ``mono_left/``, ``mono_right/``, ``frames.parquet``,
 ``gloves.parquet``, ``oak_imu.parquet``, and calibration JSON files.
 
-Standalone runtime dependencies: mcap, numpy, and pyarrow.
+Standalone runtime dependencies: mcap, protobuf, numpy, and pyarrow.
 """
 
 from __future__ import annotations
@@ -23,6 +23,8 @@ import pyarrow as pa
 import pyarrow.parquet as pq
 from mcap.reader import make_reader
 
+import foxglove_pb2
+
 # Keep exporter standalone: duplicate protocol constants instead of importing
 # glove_reader/oak_reader, which require hardware-facing dependencies.
 FINGER_NAMES = ["thumb", "index", "middle", "ring", "little"]
@@ -34,8 +36,8 @@ _CAMERA_IMAGE_TOPICS = {
 }
 
 _CALIBRATION_TOPICS = {
-    "/calibration/user/json": "user_calibration.json",
-    "/calibration/force/json": "force_calibration.json",
+    "/calibration/glove/user/json": "user_calibration.json",
+    "/calibration/glove/force/json": "force_calibration.json",
     "/calibration/camera/json": "camera_calibration.json",
 }
 
@@ -57,6 +59,12 @@ def _optional_f32(value: tuple | list | None) -> np.ndarray | None:
     return np.array(value, dtype=np.float32) if value is not None else None
 
 
+def _optional_nested_f32(value: list[list[float]] | None) -> list[list[float]] | None:
+    if value is None:
+        return None
+    return np.asarray(value, dtype=np.float32).tolist()
+
+
 def _is_finite_number(value: float | None) -> bool:
     return value is not None and np.isfinite(value)
 
@@ -73,63 +81,6 @@ def _align_nearest(ref_ts: np.ndarray, src_ts: np.ndarray) -> tuple[np.ndarray, 
     indices = np.where(dt_left <= dt_right, left_idx, right_idx)
     dt_ms = ((src[indices] - ref) * 1000.0).astype(np.float32)
     return indices, dt_ms
-
-
-def camera_calibration_to_dict(camera_calib: Any) -> dict[str, Any]:
-    """Return the generated camera_calibration.json payload."""
-    return {
-        "rgb": {
-            "resolution": list(camera_calib.rgb_resolution),
-            "intrinsics": camera_calib.rgb_intrinsics,
-            "distortion": camera_calib.rgb_distortion,
-        },
-        "left_mono": {
-            "resolution": list(camera_calib.left_resolution),
-            "intrinsics": camera_calib.left_intrinsics,
-            "distortion": camera_calib.left_distortion,
-        },
-        "right_mono": {
-            "resolution": list(camera_calib.right_resolution),
-            "intrinsics": camera_calib.right_intrinsics,
-            "distortion": camera_calib.right_distortion,
-        },
-        "extrinsics": {
-            "left_mono_to_rgb": camera_calib.T_left_to_rgb,
-            "right_mono_to_rgb": camera_calib.T_right_to_rgb,
-            "imu_to_rgb": camera_calib.T_imu_to_rgb,
-        },
-    }
-
-
-def user_calibration_to_dict(
-    glove_calib: Any,
-    connected_hands: list[str] | None = None,
-) -> dict[str, Any]:
-    """Return a user_calibration.json-compatible payload."""
-    hands_to_include = connected_hands or list(glove_calib.hands.keys())
-    return {
-        "user": glove_calib.user,
-        "timestamp": glove_calib.timestamp,
-        "gloves": {
-            hand_key: {
-                "bend_min": hc.bend_min,
-                "bend_max": hc.bend_max,
-                "tactile_zero_finger": hc.tactile_zero_finger,
-                "tactile_zero_palm": hc.tactile_zero_palm,
-            }
-            for hand_key in hands_to_include
-            if (hc := glove_calib.hands.get(hand_key)) is not None
-        },
-    }
-
-
-def force_calibration_to_dict(
-    force_calib: Any,
-    connected_hands: list[str] | None = None,
-) -> dict[str, Any]:
-    """Return a force_calibration.json-compatible payload."""
-    hands_to_include = connected_hands or list(force_calib.hands.keys())
-    return force_calib.to_dict(hands_to_include)
 
 
 @dataclass
@@ -229,6 +180,10 @@ class GloveAccumulator:
     _imu_quaternion: list[np.ndarray | None] = field(default_factory=list)
     _imu_gyro: list[np.ndarray | None] = field(default_factory=list)
     _imu_accel: list[np.ndarray | None] = field(default_factory=list)
+    _finger_force_N_total: list[np.ndarray | None] = field(default_factory=list)
+    _finger_force_N_pixels: list[list[list[float]] | None] = field(
+        default_factory=list
+    )
 
     def add_frame(
         self,
@@ -239,6 +194,8 @@ class GloveAccumulator:
         imu_quaternion: tuple[float, ...] | None = None,
         imu_gyro: tuple[float, ...] | None = None,
         imu_accel: tuple[float, ...] | None = None,
+        finger_force_N_total: list[float] | None = None,
+        finger_force_N_pixels: list[list[float]] | None = None,
     ) -> None:
         self._timestamps.append(timestamp)
         for finger in FINGER_NAMES:
@@ -252,6 +209,10 @@ class GloveAccumulator:
         self._imu_quaternion.append(_optional_f32(imu_quaternion))
         self._imu_gyro.append(_optional_f32(imu_gyro))
         self._imu_accel.append(_optional_f32(imu_accel))
+        self._finger_force_N_total.append(_optional_f32(finger_force_N_total))
+        self._finger_force_N_pixels.append(
+            _optional_nested_f32(finger_force_N_pixels)
+        )
 
     @property
     def frame_count(self) -> int:
@@ -293,6 +254,14 @@ class GloveAccumulator:
         cols[f"{hand}_imu_accel"] = pa.array(
             [self._imu_accel[i] for i in indices], type=pa.list_(pa.float32())
         )
+        cols[f"{hand}_finger_force_N_total"] = pa.array(
+            [self._finger_force_N_total[i] for i in indices],
+            type=pa.list_(pa.float32()),
+        )
+        cols[f"{hand}_finger_force_N_pixels"] = pa.array(
+            [self._finger_force_N_pixels[i] for i in indices],
+            type=pa.list_(pa.list_(pa.float32())),
+        )
         return cols
 
     def _null_columns(self, n: int) -> dict[str, pa.Array]:
@@ -308,6 +277,12 @@ class GloveAccumulator:
         cols[f"{hand}_imu_quaternion"] = pa.nulls(n, type=pa.list_(pa.float32()))
         cols[f"{hand}_imu_gyro"] = pa.nulls(n, type=pa.list_(pa.float32()))
         cols[f"{hand}_imu_accel"] = pa.nulls(n, type=pa.list_(pa.float32()))
+        cols[f"{hand}_finger_force_N_total"] = pa.nulls(
+            n, type=pa.list_(pa.float32())
+        )
+        cols[f"{hand}_finger_force_N_pixels"] = pa.nulls(
+            n, type=pa.list_(pa.list_(pa.float32()))
+        )
         return cols
 
     def raw_rows(self) -> list[dict[str, Any]]:
@@ -321,6 +296,8 @@ class GloveAccumulator:
                 "imu_quaternion": self._imu_quaternion[idx],
                 "imu_gyro": self._imu_gyro[idx],
                 "imu_accel": self._imu_accel[idx],
+                "finger_force_N_total": self._finger_force_N_total[idx],
+                "finger_force_N_pixels": self._finger_force_N_pixels[idx],
             }
             for finger in FINGER_NAMES:
                 row[f"{finger}_pressure"] = self._finger_pressure[finger][idx]
@@ -363,6 +340,14 @@ def write_gloves_parquet(
     columns["imu_accel"] = pa.array(
         [row["imu_accel"] for row in rows], type=pa.list_(pa.float32())
     )
+    columns["finger_force_N_total"] = pa.array(
+        [row["finger_force_N_total"] for row in rows],
+        type=pa.list_(pa.float32()),
+    )
+    columns["finger_force_N_pixels"] = pa.array(
+        [row["finger_force_N_pixels"] for row in rows],
+        type=pa.list_(pa.list_(pa.float32())),
+    )
     pq.write_table(pa.table(columns), output_dir / "gloves.parquet")
 
 
@@ -402,10 +387,9 @@ def export_mcap_to_episode(
 ) -> McapExportSummary:
     """Reconstruct episode files from one or more ``recording_*.mcap`` files.
 
-    The resulting folder uses the same base structure as the current live
-    writer: image folders, camera-rate ``frames.parquet`` with nearest-neighbor
-    glove alignment, raw-rate ``gloves.parquet``, and full-rate
-    ``oak_imu.parquet``.
+    The resulting folder contains image folders, camera-rate
+    ``frames.parquet`` with nearest-neighbor glove alignment, raw-rate
+    ``gloves.parquet``, and full-rate ``oak_imu.parquet``.
     """
     if isinstance(mcap_path, str | Path):
         mcap_paths = _expand_mcap_paths([mcap_path])
@@ -485,7 +469,8 @@ def _read_mcap(mcap_paths: Iterable[Path]) -> _McapContents:
                     payload = json.loads(message.data)
                     contents.frames[int(payload["frame_idx"])] = payload
                 elif topic in _CAMERA_IMAGE_TOPICS:
-                    contents.images[topic][int(message.sequence)] = bytes(message.data)
+                    image = foxglove_pb2.CompressedImage.FromString(message.data)
+                    contents.images[topic][int(message.sequence)] = bytes(image.data)
                 elif topic.startswith("/glove/") and topic.endswith("/tactile"):
                     _store_glove_tactile_payload(contents, json.loads(message.data))
                 elif topic.startswith("/glove/") and topic.endswith("/imu"):
@@ -545,6 +530,8 @@ def _materialize_glove_payloads(contents: _McapContents) -> None:
                 imu_quaternion=_tuple_or_none(imu_payload.get("imu_quaternion")),
                 imu_gyro=_tuple_or_none(imu_payload.get("imu_gyro")),
                 imu_accel=_tuple_or_none(imu_payload.get("imu_accel")),
+                finger_force_N_total=payload.get("finger_force_N_total"),
+                finger_force_N_pixels=payload.get("finger_force_N_pixels"),
             )
 
 

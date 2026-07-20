@@ -1,19 +1,36 @@
 # FusionX-DataCollection Standalone App
 
-Use the standalone app releases when you want a ready-to-run recording GUI or offline post-processing utility.
+Use the standalone app releases when you want a ready-to-run recording GUI, Foxglove playback workspace, or offline post-processing utility.
 
 Download pre-built assets from the [Releases](https://github.com/TouchTronix-Robotics/FusionX-DataCollection/releases) page.
 
 ## Release assets
 
-- **Linux desktop**: `touchtronix-fusionX-PC-*-linux-x86_64.AppImage` — full desktop GUI
-- **Linux miniPC / touchscreen**: `touchtronix-fusionX-miniPC-*-linux-x86_64.AppImage` — fullscreen touch GUI
-- **Linux CLI recorder**: `touchtronix-fusionX-cli-*-linux-x86_64.AppImage` — terminal recording
-- **Windows desktop**: `touchtronix-fusionX-PC-*-windows-x86_64.zip` — full desktop GUI
-- **Windows miniPC / touchscreen**: `touchtronix-fusionX-miniPC-*-windows-x86_64.zip` — fullscreen touch GUI
-- **Windows CLI recorder**: `touchtronix-fusionX-cli-*-windows-x86_64.zip` — terminal recording
+- **Linux GUI**: `touchtronix-fusionX-VERSION-linux-x86_64.AppImage` — unified fullscreen touch GUI; pass `--windowed` for desktop use
+- **Linux CLI recorder**: `touchtronix-fusionX-cli-VERSION-linux-x86_64.AppImage` — terminal recording
+- **Windows GUI**: `touchtronix-fusionX-VERSION-windows-x86_64.exe` — unified fullscreen touch GUI; pass `--windowed` for desktop use
+- **Windows CLI recorder**: `touchtronix-fusionX-cli-VERSION-windows-x86_64.exe` — terminal recording
+
+Replace `VERSION` with the downloaded release version.
 
 A valid license key is required on first launch.
+
+## Foxglove viewer downloads
+
+Current viewer files are tracked directly in this repository rather than bundled into the application release archives:
+
+- [`touchtronixrobotics.fusionx-tactile-panel-0.2.2.foxe`](touchtronixrobotics.fusionx-tactile-panel-0.2.2.foxe) — self-contained **FusionX Tactile** panel extension.
+- [`fusionx_foxglove_layout.json`](fusionx_foxglove_layout.json) — canonical camera, tactile, OAK IMU, and separate LH/RH glove IMU workspace.
+
+To view a current `touchtronix.raw.v2` recording:
+
+1. Install [Foxglove Desktop](https://foxglove.dev/download).
+2. Download both files above. On each GitHub file page, select **Download raw file**.
+3. Open or drag the `.foxe` file into Foxglove Desktop, then reload Foxglove. Local extension installation may require a Foxglove developer seat.
+4. Import `fusionx_foxglove_layout.json` from the Foxglove layout menu. Install the extension first so the custom tactile panel resolves correctly.
+5. Open any `recording_*.mcap` segment.
+
+The tactile panel displays both gloves simultaneously from `/glove/lh/tactile` and `/glove/rh/tactile`. It supports raw tactile, raw bend, total finger force, and per-pixel force views when corresponding fields exist in the recording. The package needs no source checkout, Node.js, or npm.
 
 ## Linux setup
 
@@ -46,7 +63,7 @@ mkdir -p ~/Touchtronix
 mv ~/Downloads/touchtronix-*.AppImage ~/Touchtronix/
 cd ~/Touchtronix
 chmod +x touchtronix-*.AppImage
-./touchtronix-fusionX-PC-*-linux-x86_64.AppImage
+./touchtronix-fusionX-VERSION-linux-x86_64.AppImage --windowed
 ```
 
 The app stores data next to the AppImage:
@@ -68,18 +85,18 @@ sudo apt install libfuse2
 
 ## Windows setup
 
-Extract `touchtronix-fusionX-PC-*-windows-x86_64.zip` and run `touchtronix-fusionX-PC.exe`. For the fullscreen touch GUI, extract `touchtronix-fusionX-miniPC-*-windows-x86_64.zip` and run `touchtronix-fusionX-miniPC.exe`. OAK drivers are bundled.
+Run `touchtronix-fusionX-VERSION-windows-x86_64.exe` directly after replacing `VERSION` with the downloaded release version. It opens fullscreen by default; pass `--windowed` for desktop use. OAK runtime dependencies are bundled.
 
 If the wireless glove dongle is not detected, install the [CH340 USB-serial driver](https://www.wch-ic.com/downloads/CH341SER_EXE.html).
 
 ## Using the app
 
 1. **Calibration tab** — select LH/RH glove serial ports, enter a username, click **Start Calibration**, and follow the on-screen prompts. The profile is saved under `~/Touchtronix/calibrations/<user>.json` when using the recommended AppImage layout.
-2. **Recording tab** — select serial ports, pick an output directory and episode name, optionally load a calibration file, click **Start Preview** → **Start Recording**, then press **Stop Recording** to save. If an external keyboard is connected, you can also press the space bar to start and stop recording.
+2. **Recording tab** — select serial ports, pick an output directory and episode name, and optionally load user and glove force/pressure calibration files.
+3. Choose **Live View** before starting preview. It defaults off to reduce processor load and remains locked for that preview/recording session; it affects visualization only, not recorded sensor rates.
+4. Click **Start Preview** → **Start Recording**, then press **Stop Recording** to save. If an external keyboard is connected, the space bar also starts and stops recording.
 
-Recordings are written as segmented MCAP raw capture files. Use the standalone
-MCAP exporter below to reconstruct per-frame image folders and Parquet sensor
-logs on an offline workstation.
+Recordings are written as segmented MCAP raw capture files. Open them directly in Foxglove using the viewer files above. Use the standalone MCAP exporter below only when per-frame image folders, Parquet sensor logs, or calibration JSON files are needed for offline analysis.
 
 ## Headless CLI recording
 
@@ -88,8 +105,8 @@ The CLI release asset records directly from a terminal and writes the same datas
 Linux:
 
 ```bash
-chmod +x touchtronix-fusionX-cli-*-linux-x86_64.AppImage
-./touchtronix-fusionX-cli-*-linux-x86_64.AppImage test1 --headless \
+chmod +x touchtronix-fusionX-cli-VERSION-linux-x86_64.AppImage
+./touchtronix-fusionX-cli-VERSION-linux-x86_64.AppImage test1 \
   --glove-port-lh /dev/ttyACM1 \
   --glove-port-rh /dev/ttyACM0 \
   --calibration ~/Touchtronix/calibrations/user.json \
@@ -99,7 +116,7 @@ chmod +x touchtronix-fusionX-cli-*-linux-x86_64.AppImage
 Windows:
 
 ```powershell
-.\touchtronix-fusionX-cli.exe test1 --headless `
+.\touchtronix-fusionX-cli-VERSION-windows-x86_64.exe test1 `
   --glove-port-lh COM4 `
   --glove-port-rh COM5 `
   --calibration C:\Users\you\Touchtronix\calibrations\user.json `
@@ -112,31 +129,29 @@ Common options:
 
 - `episode` — optional episode folder name. If omitted, the app uses `recording_YYYYMMDD_HHMMSS`.
 - `-o`, `--output-dir` — parent dataset directory. The default is `dataset`.
-- `--headless` — start recording immediately without a preview window.
 - `--glove-port-lh`, `--glove-port-rh` — left and right glove serial ports. Pass the ports you want recorded.
 - `--calibrate USER` — run glove user calibration and save `calibrations/USER.json`.
 - `--calibration FILE` — load an existing user calibration JSON.
 - `--force-calibration FILE` — load glove force or per-pixel pressure calibration.
-- `--jpeg-quality N` — RGB JPEG quality. The default is `95`.
+- `--jpeg-quality N` — OAK hardware-MJPEG quality for RGB and both mono streams. The default is `90`.
 - `--show-metrics` — print FPS and latency metrics about once per second.
+- `--trace` — enable DepthAI trace logging for per-node timings.
 
-If no OAK camera is detected, the CLI runs in glove-only mode. If `--headless` is omitted, the CLI opens the legacy preview window; press `s` to start recording and `q` to stop.
+The CLI is always headless and begins recording immediately. An OAK camera is required; startup stops with an error when no camera is detected. Use `Ctrl+C` to stop and save.
 
 ## Standalone post-processing
 
-Recorded episodes contain one or more `recording_*.mcap` files. First export
-those MCAP segments into image folders and Parquet logs, then convert the
-exported episode into MP4 preview videos.
+Recorded episodes contain one or more independently playable `recording_*.mcap` files. Foxglove opens these files directly, so no preview-video conversion step is needed. Install the tactile extension and layout from the [Foxglove viewer downloads](#foxglove-viewer-downloads) section before viewing recordings.
+
+Use the exporter only when analysis tools need extracted images, Parquet tables, or calibration JSON:
 
 ```bash
 cd FusionX-DataCollection
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r post_processing/requirements.txt
-sudo apt install ffmpeg  # Linux, if ffmpeg/ffprobe are not already installed
 python post_processing/mcap_exporter.py /path/to/dataset/recording_xxx/recording_*.mcap \
   -o /path/to/dataset/recording_xxx_exported
-python post_processing/convert_to_video.py /path/to/dataset/recording_xxx_exported
 ```
 
 On Windows PowerShell, activate the environment with:
@@ -145,43 +160,32 @@ On Windows PowerShell, activate the environment with:
 .\.venv\Scripts\Activate.ps1
 python post_processing\mcap_exporter.py C:\path\to\recording_xxx\recording_*.mcap `
   -o C:\path\to\recording_xxx_exported
-python post_processing\convert_to_video.py C:\path\to\recording_xxx_exported
 ```
 
 The MCAP exporter reconstructs:
 
-- `rgb/`, `mono_left/`, `mono_right/` - per-frame image folders
-- `frames.parquet` - camera-frame table with aligned glove and OAK IMU columns
-- `gloves.parquet` - full-rate glove samples
-- `oak_imu.parquet` - full-rate OAK IMU samples
+- `rgb/`, `mono_left/`, `mono_right/` — native camera JPEG folders
+- `frames.parquet` — camera-frame table with nearest glove/OAK IMU samples and optional calibrated force columns
+- `gloves.parquet` — full-rate raw glove, IMU, and optional `finger_force_N_total` or `finger_force_N_pixels` samples
+- `oak_imu.parquet` — full-rate OAK IMU samples
 - `user_calibration.json`, `force_calibration.json`, `camera_calibration.json` when present
 
-The video converter writes these outputs next to `frames.parquet`:
-
-- `rgb.mp4` — RGB image sequence encoded as H.264
-- `preview_glove.mp4` — tactile pressure/bend visualization
-- `preview_all.mp4` — RGB + mono stereo + glove composite preview
-- `video_meta.json` — timestamps, FPS, stream metadata
-
-Dependencies: Python 3.10+, `mcap`, `numpy`, `opencv-python`, `pyarrow`, `tqdm`,
-plus system `ffmpeg` and `ffprobe` on `PATH` with H.264/libx264 support. No OAK
-camera, DepthAI, PySide, serial, or license dependencies are required for
-offline export or video conversion.
+Dependencies: Python 3.10+, `mcap`, `protobuf`, `numpy`, and `pyarrow`. No OAK camera, DepthAI, PySide, serial, FFmpeg, or license dependencies are required for offline export.
 
 ## One-time miniPC configuration
 
-The repository includes `setup-miniPC.sh` for Ubuntu/GNOME miniPC touchscreen deployments. Run it once as the logged-in desktop user after the touchscreen is connected:
+The repository includes `setup-miniPC-ubuntu.sh` for Ubuntu/GNOME miniPC touchscreen deployments. Run it once as the logged-in desktop user after the touchscreen is connected:
 
 ```bash
 cd FusionX-DataCollection
-chmod +x setup-miniPC.sh
-./setup-miniPC.sh
+chmod +x setup-miniPC-ubuntu.sh
+./setup-miniPC-ubuntu.sh
 ```
 
 Do not run the script with `sudo`; it asks for sudo only for the system-level steps. By default it targets display output `DSI-1`, applies transform `3`, and sets the screen blank timeout to `120` seconds. Override those defaults when needed:
 
 ```bash
-OUTPUT=HDMI-1 TRANSFORM=1 IDLE_DELAY_SECONDS=300 ./setup-miniPC.sh
+OUTPUT=HDMI-1 TRANSFORM=1 IDLE_DELAY_SECONDS=300 ./setup-miniPC-ubuntu.sh
 ```
 
 The script configures the miniPC for kiosk-style recording:

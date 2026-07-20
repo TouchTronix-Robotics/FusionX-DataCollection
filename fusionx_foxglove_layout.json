@@ -1,0 +1,427 @@
+{
+  "configById": {
+    "Plot!oakaccl": {
+      "title": "OAK IMU — Acceleration",
+      "paths": [
+        {
+          "value": "/oak/imu.accel[0]",
+          "label": "X",
+          "enabled": true,
+          "timestampMethod": "receiveTime"
+        },
+        {
+          "value": "/oak/imu.accel[1]",
+          "label": "Y",
+          "enabled": true,
+          "timestampMethod": "receiveTime"
+        },
+        {
+          "value": "/oak/imu.accel[2]",
+          "label": "Z",
+          "enabled": true,
+          "timestampMethod": "receiveTime"
+        }
+      ],
+      "showXAxisLabels": true,
+      "showYAxisLabels": true,
+      "showLegend": true,
+      "legendDisplay": "floating",
+      "showPlotValuesInLegend": true,
+      "isSynced": true,
+      "xAxisVal": "timestamp",
+      "sidebarDimension": 240
+    },
+    "Plot!oakgyro": {
+      "title": "OAK IMU — Gyroscope",
+      "paths": [
+        {
+          "value": "/oak/imu.gyro[0]",
+          "label": "X",
+          "enabled": true,
+          "timestampMethod": "receiveTime"
+        },
+        {
+          "value": "/oak/imu.gyro[1]",
+          "label": "Y",
+          "enabled": true,
+          "timestampMethod": "receiveTime"
+        },
+        {
+          "value": "/oak/imu.gyro[2]",
+          "label": "Z",
+          "enabled": true,
+          "timestampMethod": "receiveTime"
+        }
+      ],
+      "showXAxisLabels": true,
+      "showYAxisLabels": true,
+      "showLegend": true,
+      "legendDisplay": "floating",
+      "showPlotValuesInLegend": true,
+      "isSynced": true,
+      "xAxisVal": "timestamp",
+      "sidebarDimension": 240
+    },
+    "Plot!oakquat": {
+      "title": "OAK IMU — Orientation",
+      "paths": [
+        {
+          "value": "/oak/imu.game_rotation_quaternion[0]",
+          "label": "W",
+          "enabled": true,
+          "timestampMethod": "receiveTime"
+        },
+        {
+          "value": "/oak/imu.game_rotation_quaternion[1]",
+          "label": "X",
+          "enabled": true,
+          "timestampMethod": "receiveTime"
+        },
+        {
+          "value": "/oak/imu.game_rotation_quaternion[2]",
+          "label": "Y",
+          "enabled": true,
+          "timestampMethod": "receiveTime"
+        },
+        {
+          "value": "/oak/imu.game_rotation_quaternion[3]",
+          "label": "Z",
+          "enabled": true,
+          "timestampMethod": "receiveTime"
+        }
+      ],
+      "showXAxisLabels": true,
+      "showYAxisLabels": true,
+      "showLegend": true,
+      "legendDisplay": "floating",
+      "showPlotValuesInLegend": true,
+      "isSynced": true,
+      "xAxisVal": "timestamp",
+      "sidebarDimension": 240
+    },
+    "Plot!lhaccel": {
+      "title": "LH IMU — Acceleration",
+      "paths": [
+        {
+          "value": "/glove/lh/imu.imu_accel[0]",
+          "label": "X",
+          "enabled": true,
+          "timestampMethod": "receiveTime"
+        },
+        {
+          "value": "/glove/lh/imu.imu_accel[1]",
+          "label": "Y",
+          "enabled": true,
+          "timestampMethod": "receiveTime"
+        },
+        {
+          "value": "/glove/lh/imu.imu_accel[2]",
+          "label": "Z",
+          "enabled": true,
+          "timestampMethod": "receiveTime"
+        }
+      ],
+      "showXAxisLabels": true,
+      "showYAxisLabels": true,
+      "showLegend": true,
+      "legendDisplay": "floating",
+      "showPlotValuesInLegend": true,
+      "isSynced": true,
+      "xAxisVal": "timestamp",
+      "sidebarDimension": 240
+    },
+    "Plot!lhgyro1": {
+      "title": "LH IMU — Gyroscope",
+      "paths": [
+        {
+          "value": "/glove/lh/imu.imu_gyro[0]",
+          "label": "X",
+          "enabled": true,
+          "timestampMethod": "receiveTime"
+        },
+        {
+          "value": "/glove/lh/imu.imu_gyro[1]",
+          "label": "Y",
+          "enabled": true,
+          "timestampMethod": "receiveTime"
+        },
+        {
+          "value": "/glove/lh/imu.imu_gyro[2]",
+          "label": "Z",
+          "enabled": true,
+          "timestampMethod": "receiveTime"
+        }
+      ],
+      "showXAxisLabels": true,
+      "showYAxisLabels": true,
+      "showLegend": true,
+      "legendDisplay": "floating",
+      "showPlotValuesInLegend": true,
+      "isSynced": true,
+      "xAxisVal": "timestamp",
+      "sidebarDimension": 240
+    },
+    "Plot!lhquat1": {
+      "title": "LH IMU — Orientation",
+      "paths": [
+        {
+          "value": "/glove/lh/imu.imu_quaternion[0]",
+          "label": "W",
+          "enabled": true,
+          "timestampMethod": "receiveTime"
+        },
+        {
+          "value": "/glove/lh/imu.imu_quaternion[1]",
+          "label": "X",
+          "enabled": true,
+          "timestampMethod": "receiveTime"
+        },
+        {
+          "value": "/glove/lh/imu.imu_quaternion[2]",
+          "label": "Y",
+          "enabled": true,
+          "timestampMethod": "receiveTime"
+        },
+        {
+          "value": "/glove/lh/imu.imu_quaternion[3]",
+          "label": "Z",
+          "enabled": true,
+          "timestampMethod": "receiveTime"
+        }
+      ],
+      "showXAxisLabels": true,
+      "showYAxisLabels": true,
+      "showLegend": true,
+      "legendDisplay": "floating",
+      "showPlotValuesInLegend": true,
+      "isSynced": true,
+      "xAxisVal": "timestamp",
+      "sidebarDimension": 240
+    },
+    "Plot!rhaccel": {
+      "title": "RH IMU — Acceleration",
+      "paths": [
+        {
+          "value": "/glove/rh/imu.imu_accel[0]",
+          "label": "X",
+          "enabled": true,
+          "timestampMethod": "receiveTime"
+        },
+        {
+          "value": "/glove/rh/imu.imu_accel[1]",
+          "label": "Y",
+          "enabled": true,
+          "timestampMethod": "receiveTime"
+        },
+        {
+          "value": "/glove/rh/imu.imu_accel[2]",
+          "label": "Z",
+          "enabled": true,
+          "timestampMethod": "receiveTime"
+        }
+      ],
+      "showXAxisLabels": true,
+      "showYAxisLabels": true,
+      "showLegend": true,
+      "legendDisplay": "floating",
+      "showPlotValuesInLegend": true,
+      "isSynced": true,
+      "xAxisVal": "timestamp",
+      "sidebarDimension": 240
+    },
+    "Plot!rhgyro1": {
+      "title": "RH IMU — Gyroscope",
+      "paths": [
+        {
+          "value": "/glove/rh/imu.imu_gyro[0]",
+          "label": "X",
+          "enabled": true,
+          "timestampMethod": "receiveTime"
+        },
+        {
+          "value": "/glove/rh/imu.imu_gyro[1]",
+          "label": "Y",
+          "enabled": true,
+          "timestampMethod": "receiveTime"
+        },
+        {
+          "value": "/glove/rh/imu.imu_gyro[2]",
+          "label": "Z",
+          "enabled": true,
+          "timestampMethod": "receiveTime"
+        }
+      ],
+      "showXAxisLabels": true,
+      "showYAxisLabels": true,
+      "showLegend": true,
+      "legendDisplay": "floating",
+      "showPlotValuesInLegend": true,
+      "isSynced": true,
+      "xAxisVal": "timestamp",
+      "sidebarDimension": 240
+    },
+    "Plot!rhquat1": {
+      "title": "RH IMU — Orientation",
+      "paths": [
+        {
+          "value": "/glove/rh/imu.imu_quaternion[0]",
+          "label": "W",
+          "enabled": true,
+          "timestampMethod": "receiveTime"
+        },
+        {
+          "value": "/glove/rh/imu.imu_quaternion[1]",
+          "label": "X",
+          "enabled": true,
+          "timestampMethod": "receiveTime"
+        },
+        {
+          "value": "/glove/rh/imu.imu_quaternion[2]",
+          "label": "Y",
+          "enabled": true,
+          "timestampMethod": "receiveTime"
+        },
+        {
+          "value": "/glove/rh/imu.imu_quaternion[3]",
+          "label": "Z",
+          "enabled": true,
+          "timestampMethod": "receiveTime"
+        }
+      ],
+      "showXAxisLabels": true,
+      "showYAxisLabels": true,
+      "showLegend": true,
+      "legendDisplay": "floating",
+      "showPlotValuesInLegend": true,
+      "isSynced": true,
+      "xAxisVal": "timestamp",
+      "sidebarDimension": 240
+    },
+    "Image!rof2wb": {
+      "imageMode": {
+        "imageTopic": "/oak/rgb/jpeg"
+      },
+      "cameraState": {
+        "distance": 20,
+        "perspective": true,
+        "phi": 60,
+        "target": [
+          0,
+          0,
+          0
+        ],
+        "targetOffset": [
+          0,
+          0,
+          0
+        ],
+        "targetOrientation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "thetaOffset": 60,
+        "fovy": 45,
+        "near": 0.5,
+        "far": 5000
+      },
+      "followMode": "follow-pose",
+      "scene": {},
+      "transforms": {},
+      "topics": {},
+      "layers": {},
+      "publish": {
+        "type": "point",
+        "poseTopic": "/move_base_simple/goal",
+        "pointTopic": "/clicked_point",
+        "poseEstimateTopic": "/initialpose",
+        "poseEstimateXDeviation": 0.5,
+        "poseEstimateYDeviation": 0.5,
+        "poseEstimateThetaDeviation": 0.26179939
+      },
+      "synchronize": false,
+      "title": "Head Camera"
+    },
+    "Tab!oakimu1": {
+      "activeTabIdx": 2,
+      "tabs": [
+        {
+          "title": "Acceleration",
+          "layout": "Plot!oakaccl"
+        },
+        {
+          "title": "Gyroscope",
+          "layout": "Plot!oakgyro"
+        },
+        {
+          "title": "Orientation",
+          "layout": "Plot!oakquat"
+        }
+      ]
+    },
+    "fusionx-tactile-panel.FusionX Tactile!27chuko": {
+      "mode": "raw"
+    },
+    "Tab!lhimu01": {
+      "activeTabIdx": 0,
+      "tabs": [
+        {
+          "title": "Acceleration",
+          "layout": "Plot!lhaccel"
+        },
+        {
+          "title": "Gyroscope",
+          "layout": "Plot!lhgyro1"
+        },
+        {
+          "title": "Orientation",
+          "layout": "Plot!lhquat1"
+        }
+      ]
+    },
+    "Tab!rhimu01": {
+      "activeTabIdx": 0,
+      "tabs": [
+        {
+          "title": "Acceleration",
+          "layout": "Plot!rhaccel"
+        },
+        {
+          "title": "Gyroscope",
+          "layout": "Plot!rhgyro1"
+        },
+        {
+          "title": "Orientation",
+          "layout": "Plot!rhquat1"
+        }
+      ]
+    }
+  },
+  "layout": {
+    "direction": "column",
+    "first": {
+      "direction": "row",
+      "first": "Image!rof2wb",
+      "second": "fusionx-tactile-panel.FusionX Tactile!27chuko",
+      "splitPercentage": 50
+    },
+    "second": {
+      "direction": "row",
+      "first": "Tab!oakimu1",
+      "second": {
+        "direction": "row",
+        "first": "Tab!lhimu01",
+        "second": "Tab!rhimu01",
+        "splitPercentage": 50
+      },
+      "splitPercentage": 50
+    },
+    "splitPercentage": 55
+  },
+  "globalVariables": {},
+  "playbackConfig": {
+    "speed": 1
+  },
+  "userNodes": {}
+}
