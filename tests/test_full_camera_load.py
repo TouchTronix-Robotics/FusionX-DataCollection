@@ -39,6 +39,8 @@ HEAD_PID = 0x0234
 WRIST_PID = 0x2502
 FPS = 30
 MIN_SANE_IMU_RATIO = 0.9
+SCAN_ATTEMPTS = 3
+SCAN_RETRY_DELAY_SECONDS = 1.0
 
 
 def positive_float(value: str) -> float:
@@ -92,25 +94,59 @@ def validate_usb_layout(head_bus: int, wrist_buses: list[int]) -> None:
 
 
 def scan_camera_devices() -> tuple[Any, list[Any]]:
-    devices = [
-        device
-        for device in sdk.scan_devices()
-        if device.vid == ARDUCAM_VID and device.pid in (HEAD_PID, WRIST_PID)
-    ]
+    devices: list[Any] = []
+    heads: list[Any] = []
+    wrists: list[Any] = []
+    last_error: Exception | None = None
+    for attempt in range(1, SCAN_ATTEMPTS + 1):
+        try:
+            devices = [
+                device
+                for device in sdk.scan_devices()
+                if device.vid == ARDUCAM_VID
+                and device.pid in (HEAD_PID, WRIST_PID)
+            ]
+            heads = [device for device in devices if device.pid == HEAD_PID]
+            wrists = [device for device in devices if device.pid == WRIST_PID]
+            last_error = None
+        except Exception as exc:
+            devices = []
+            heads = []
+            wrists = []
+            last_error = exc
+
+        if (
+            len(heads) == 1
+            and len(wrists) == 2
+            and all(device.device_path for device in devices)
+        ):
+            break
+        if attempt < SCAN_ATTEMPTS:
+            print(
+                f"[WARN] Camera scan {attempt}/{SCAN_ATTEMPTS} found "
+                f"{len(heads)} head and {len(wrists)} wrist; retrying...",
+                file=sys.stderr,
+            )
+            time.sleep(SCAN_RETRY_DELAY_SECONDS)
+
+    if last_error is not None:
+        raise RuntimeError(
+            f"camera scan failed after {SCAN_ATTEMPTS} attempts: {last_error}"
+        ) from last_error
     for index, device in enumerate(devices):
         if not device.device_path:
             raise RuntimeError(f"device[{index}] has no SDK device path")
         print(
             f"device[{index}]: vid=0x{device.vid:04x} pid=0x{device.pid:04x} "
-            f"node={device.video_node} serial={device.serial_number or '(none)'} "
-            f"product={device.product} path={device.device_path}"
+            f"node={device.video_node} bus={device.bus_number} "
+            f"serial={device.serial_number or '(none)'} product={device.product} "
+            f"path={device.device_path}"
         )
 
-    heads = [device for device in devices if device.pid == HEAD_PID]
-    wrists = [device for device in devices if device.pid == WRIST_PID]
     if len(heads) != 1 or len(wrists) != 2:
         raise RuntimeError(
-            "expected exactly one head stereo camera and two wrist cameras; "
+            f"camera scan failed after {SCAN_ATTEMPTS} attempts: expected exactly "
+            "one head stereo camera and two wrist cameras; "
             f"found {len(heads)} head and {len(wrists)} wrist"
         )
 
