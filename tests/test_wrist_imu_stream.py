@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Test a monocular Arducam wrist camera's calibration, 1080p UVC, and IMU.
+"""Test a monocular Arducam wrist camera's 1080p UVC stream and IMU.
 
 Run from the repository root:
     python tests/test_wrist_imu_stream.py
@@ -14,16 +14,15 @@ allows approximate host-time pairing with IMU samples, not hardware clock sync.
 from __future__ import annotations
 
 import argparse
-import json
 import sys
 import time
-from dataclasses import dataclass
 from typing import Any
 
 import cv2
-from arducam_uvc_stereo_sdk import open_device, scan_devices
+from arducam_uvc_stereo_sdk import DeviceCapability, open_device
 
 from test_stereo_imu_stream import (
+    ImuHealthCheck,
     ImuSampler,
     SynchronizedImu,
     VideoPacket,
@@ -32,93 +31,9 @@ from test_stereo_imu_stream import (
     open_opencv_capture,
     positive_float,
     positive_int,
+    select_sdk_device,
     validate_frame_rate,
 )
-
-
-@dataclass(frozen=True)
-class WristCalibration:
-    name: str
-    width: int
-    height: int
-    intrinsic_matrix: list[list[float]]
-    distortion_count: int
-
-
-def parse_wrist_calibration(json_text: str) -> tuple[dict[str, Any], WristCalibration]:
-    payload = json.loads(json_text)
-    camera_data = payload.get("cameraData")
-    if camera_data is None:
-        camera = payload
-    elif isinstance(camera_data, list) and len(camera_data) == 1:
-        camera = camera_data[0]
-    else:
-        raise RuntimeError("expected calibration for exactly one wrist camera")
-
-    if not isinstance(camera, dict):
-        raise RuntimeError("wrist calibration is not a JSON object")
-    try:
-        width = int(camera["width"])
-        height = int(camera["height"])
-        matrix = [[float(value) for value in row] for row in camera["intrinsicMatrix"]]
-    except (KeyError, TypeError, ValueError) as exc:
-        raise RuntimeError("wrist calibration is missing valid dimensions or intrinsics") from exc
-    if width <= 0 or height <= 0 or len(matrix) != 3 or any(len(row) != 3 for row in matrix):
-        raise RuntimeError("wrist calibration dimensions or 3x3 intrinsic matrix are invalid")
-
-    distortion = camera.get("dist_coeff", [])
-    if not isinstance(distortion, list):
-        raise RuntimeError("wrist distortion coefficients are not a list")
-    return payload, WristCalibration(
-        name=str(camera.get("name", "wrist")),
-        width=width,
-        height=height,
-        intrinsic_matrix=matrix,
-        distortion_count=len(distortion),
-    )
-
-
-def print_calibration(
-    version: int,
-    payload: dict[str, Any],
-    calibration: WristCalibration,
-) -> None:
-    matrix = calibration.intrinsic_matrix
-    print("\n" + "=" * 80)
-    print(f"ON-DEVICE WRIST CAMERA CALIBRATION (version {version})")
-    print("=" * 80)
-    print(json.dumps(payload, indent=2))
-    print("-" * 80)
-    print(f"Camera name:             {calibration.name}")
-    print(f"Calibrated image size:   {calibration.width}x{calibration.height}")
-    print(f"Focal length:            fx={matrix[0][0]:.6f}, fy={matrix[1][1]:.6f}")
-    print(f"Principal point:         cx={matrix[0][2]:.6f}, cy={matrix[1][2]:.6f}")
-    print(f"Distortion coefficients: {calibration.distortion_count}")
-    print("=" * 80 + "\n")
-
-
-def select_sdk_device(device_index: int, serial: str | None) -> Any:
-    devices = scan_devices()
-    if not devices:
-        raise RuntimeError("no compatible Arducam UVC devices found")
-
-    for index, dev in enumerate(devices):
-        print(
-            f"device[{index}]: vid=0x{dev.vid:04x} pid=0x{dev.pid:04x} "
-            f"node={dev.video_node} serial={dev.serial_number or '(none)'} "
-            f"product={dev.product}"
-        )
-
-    if serial is not None:
-        matches = [dev for dev in devices if dev.serial_number == serial]
-        if not matches:
-            raise RuntimeError(f"no Arducam camera has serial number {serial!r}")
-        return matches[0]
-    if device_index < 0 or device_index >= len(devices):
-        raise RuntimeError(
-            f"device index {device_index} is invalid; found {len(devices)} device(s)"
-        )
-    return devices[device_index]
 
 
 def build_preview(
@@ -180,10 +95,12 @@ def build_preview(
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Test Arducam wrist camera intrinsics, 1080p UVC, and IMU."
+        description="Test an Arducam wrist camera's 1080p UVC stream and IMU."
     )
     parser.add_argument("--device-index", type=nonnegative_int, default=0)
-    parser.add_argument("--serial", help="Select a camera by USB serial number")
+    selection = parser.add_mutually_exclusive_group()
+    selection.add_argument("--serial", help="Select a camera by USB serial number")
+    selection.add_argument("--device-path", help="Select a camera by its SDK device path")
     parser.add_argument("--width", type=positive_int, default=1920)
     parser.add_argument("--height", type=positive_int, default=1080)
     parser.add_argument("--fps", type=positive_int, default=30)
@@ -194,7 +111,6 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--imu-interval-ms", type=positive_float, default=5.0)
     parser.add_argument("--sync-wait-ms", type=positive_float, default=20.0)
-    parser.add_argument("--post-calibration-delay", type=float, default=3.0)
     parser.add_argument("--preview-scale", type=positive_float, default=0.5)
     parser.add_argument("--print-every", type=positive_int, default=1)
     parser.add_argument("--headless", action="store_true", help="Do not open a GUI window")
@@ -209,30 +125,17 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> int:
     args = parse_args()
-    dev = select_sdk_device(args.device_index, args.serial)
+    dev = select_sdk_device(args.device_index, args.serial, args.device_path)
     print(
         f"\nSelected: {dev.product} serial={dev.serial_number or '(none)'} "
         f"video={dev.video_node or dev.opencv}"
     )
 
-    sdk_device = open_device(dev)
-    version, calibration_json = sdk_device.read_json()
-    payload, calibration = parse_wrist_calibration(calibration_json)
-    print_calibration(version, payload, calibration)
-    if (calibration.width, calibration.height) != (args.width, args.height):
-        print(
-            f"[WARN] Intrinsics are for {calibration.width}x{calibration.height}; "
-            f"the requested UVC test mode is {args.width}x{args.height}.",
-            file=sys.stderr,
-        )
-
-    if args.post_calibration_delay > 0:
-        print(
-            f"Waiting {args.post_calibration_delay:g} seconds after calibration flash access..."
-        )
-        time.sleep(args.post_calibration_delay)
+    # Wrist cameras do not need flash transport in production.
+    sdk_device = open_device(dev, DeviceCapability(0))
 
     imu = ImuSampler(sdk_device, interval_ms=args.imu_interval_ms)
+    imu_health = ImuHealthCheck()
     capture: cv2.VideoCapture | None = None
     frame_count = 0
     captured_count = 0
@@ -273,6 +176,7 @@ def main() -> int:
             captured_count += 1
 
             synced = imu.synchronized_sample(packet.timestamp_ns, args.sync_wait_ms)
+            imu_health.observe(synced.sample)
             if frame_count % args.print_every == 0:
                 print(format_stream_line(packet, synced), flush=True)
 
@@ -301,6 +205,7 @@ def main() -> int:
         args.fps,
         args.min_fps,
     )
+    imu_health.validate()
     print(f"Stopped after {captured_count} frame(s).")
     return 0
 
