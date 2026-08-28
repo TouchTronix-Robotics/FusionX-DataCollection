@@ -35,7 +35,16 @@ from typing import Any
 
 import cv2
 import numpy as np
-from arducam_uvc_stereo_sdk import OpenCvBackend, convert_imu, open_device, scan_devices
+from arducam_uvc_stereo_sdk import (
+    DeviceCapability,
+    OpenCvBackend,
+    convert_imu,
+    open_device,
+    scan_devices,
+)
+
+DEFAULT_STEREO_SIZE = (3840, 1200)
+DEFAULT_HEAD_IMU_INTERVAL_MS = 10.0
 
 
 @dataclass(frozen=True)
@@ -554,8 +563,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--imu-interval-ms",
         type=positive_float,
-        default=5.0,
-        help="IMU polling interval in milliseconds (default: 5)",
+        default=DEFAULT_HEAD_IMU_INTERVAL_MS,
+        help="IMU polling interval in milliseconds (default: 10; 100 Hz target)",
     )
     parser.add_argument(
         "--sync-wait-ms",
@@ -568,6 +577,11 @@ def parse_args() -> argparse.Namespace:
         type=float,
         default=3.0,
         help="Delay before streaming after flash access (default: 3 seconds)",
+    )
+    parser.add_argument(
+        "--skip-calibration",
+        action="store_true",
+        help="Skip flash access for prototypes without calibration",
     )
     parser.add_argument(
         "--translation-unit-to-m",
@@ -605,22 +619,31 @@ def main() -> int:
         f"video={dev.video_node or dev.opencv}"
     )
 
-    # Default open options require flash transport, which catches missing raw USB permissions.
-    sdk_device = open_device(dev)
-    version, calibration_json = sdk_device.read_json()
-    payload, calibration = parse_calibration(calibration_json)
-    print_calibration(
-        version,
-        payload,
-        calibration,
-        translation_unit_to_m=args.translation_unit_to_m,
-    )
-
-    if args.post_calibration_delay > 0:
+    if args.skip_calibration:
         print(
-            f"Waiting {args.post_calibration_delay:g} seconds after calibration flash access..."
+            "[WARN] Skipping stereo flash calibration; testing video and IMU only.",
+            file=sys.stderr,
         )
-        time.sleep(args.post_calibration_delay)
+        sdk_device = open_device(dev, DeviceCapability(0))
+        stream_width, stream_height = DEFAULT_STEREO_SIZE
+    else:
+        # Default open options require flash transport, catching missing raw USB permissions.
+        sdk_device = open_device(dev)
+        version, calibration_json = sdk_device.read_json()
+        payload, calibration = parse_calibration(calibration_json)
+        print_calibration(
+            version,
+            payload,
+            calibration,
+            translation_unit_to_m=args.translation_unit_to_m,
+        )
+        stream_width = calibration.combined_width
+        stream_height = calibration.height
+        if args.post_calibration_delay > 0:
+            print(
+                f"Waiting {args.post_calibration_delay:g} seconds after calibration flash access..."
+            )
+            time.sleep(args.post_calibration_delay)
 
     imu = ImuSampler(sdk_device, interval_ms=args.imu_interval_ms)
     imu_health = ImuHealthCheck()
@@ -636,12 +659,12 @@ def main() -> int:
         time.sleep(max(0.05, args.imu_interval_ms / 1000.0 * 4.0))
         capture, backend, camera_index = open_opencv_capture(
             dev,
-            width=calibration.combined_width,
-            height=calibration.height,
+            width=stream_width,
+            height=stream_height,
             fps=args.fps,
         )
         print(
-            f"Streaming {calibration.combined_width}x{calibration.height}@{args.fps} "
+            f"Streaming {stream_width}x{stream_height}@{args.fps} "
             f"through OpenCV {backend.name} index {camera_index}, "
             f"with IMU polling every {args.imu_interval_ms:g} ms."
         )
@@ -658,13 +681,10 @@ def main() -> int:
             decoded, frame = capture.retrieve()
             if not decoded or frame is None:
                 raise RuntimeError(f"OpenCV failed to decode frame {packet.sequence}")
-            if (
-                frame.shape[1] != calibration.combined_width
-                or frame.shape[0] != calibration.height
-            ):
+            if (frame.shape[1], frame.shape[0]) != (stream_width, stream_height):
                 raise RuntimeError(
                     f"decoded frame is {frame.shape[1]}x{frame.shape[0]}, "
-                    f"expected {calibration.combined_width}x{calibration.height}"
+                    f"expected {stream_width}x{stream_height}"
                 )
             if first_timestamp_ns is None:
                 first_timestamp_ns = packet.timestamp_ns

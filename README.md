@@ -45,19 +45,22 @@ python tests/test_stereo_imu_stream.py --headless --max-frames 301 --print-every
 python tests/test_wrist_imu_stream.py --headless --max-frames 301 --print-every 300
 ```
 
-Both tests report measured FPS and fail below 95 percent of the requested rate. Use `--min-fps` to set a different requirement. They also require at least 90 percent sane frame-paired IMU samples with a nonzero, advancing raw timestamp. A known non-MJPEG negotiated mode fails; an unknown FOURCC produces a warning because some OpenCV backends do not report it.
+Both tests report measured FPS and fail below 95 percent of the requested rate. Use `--min-fps` to set a different
+requirement. The head test targets 100 Hz IMU polling, while the 1080p wrist test targets 40 Hz. They also require at
+least 90 percent sane frame-paired IMU samples with a nonzero, advancing raw timestamp. A known non-MJPEG negotiated
+mode fails; an unknown FOURCC produces a warning because some OpenCV backends do not report it.
 
 After the stereo camera and each wrist camera pass individually, connect one stereo and two wrist cameras and run the
-combined production-load diagnostic:
+combined hardware-load diagnostic:
 
 ```bash
 python tests/test_full_camera_load.py --seconds 30
 ```
 
-This launches the existing diagnostics concurrently at the production hardware profile: 3840x1200 stereo MJPEG at
-30 FPS with 3 ms IMU polling, plus two 1920x1080 wrist MJPEG streams at 30 FPS with 10 ms IMU polling. It fails if the
-required camera topology is missing, the stereo calibration fails, or any child diagnostic fails its frame-rate, video,
-or IMU checks.
+This tests 3840x1200 stereo MJPEG at 30 FPS with test-specific 10 ms head-IMU polling (a 100 Hz target), plus two
+1920x1080 wrist MJPEG streams at 30 FPS with test-specific 25 ms wrist-IMU polling (a 40 Hz target). It fails if the
+required camera topology is missing, the stereo calibration fails, or any stream fails its frame-rate, video, or IMU
+checks.
 It does not test the packaged executable, its FFmpeg/DirectShow capture path, or MCAP writing.
 
 To run the stereo test, both wrist tests, and the combined load test sequentially through pytest:

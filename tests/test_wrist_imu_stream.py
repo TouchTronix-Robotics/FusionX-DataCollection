@@ -35,6 +35,9 @@ from test_stereo_imu_stream import (
     validate_frame_rate,
 )
 
+DEFAULT_WRIST_SIZE = (1920, 1080)
+DEFAULT_WRIST_IMU_INTERVAL_MS = 25.0
+
 
 def build_preview(
     frame: Any,
@@ -101,15 +104,20 @@ def parse_args() -> argparse.Namespace:
     selection = parser.add_mutually_exclusive_group()
     selection.add_argument("--serial", help="Select a camera by USB serial number")
     selection.add_argument("--device-path", help="Select a camera by its SDK device path")
-    parser.add_argument("--width", type=positive_int, default=1920)
-    parser.add_argument("--height", type=positive_int, default=1080)
+    parser.add_argument("--width", type=positive_int, default=DEFAULT_WRIST_SIZE[0])
+    parser.add_argument("--height", type=positive_int, default=DEFAULT_WRIST_SIZE[1])
     parser.add_argument("--fps", type=positive_int, default=30)
     parser.add_argument(
         "--min-fps",
         type=positive_float,
         help="Minimum measured FPS (default: 95 percent of requested FPS)",
     )
-    parser.add_argument("--imu-interval-ms", type=positive_float, default=5.0)
+    parser.add_argument(
+        "--imu-interval-ms",
+        type=positive_float,
+        default=DEFAULT_WRIST_IMU_INTERVAL_MS,
+        help="IMU polling interval in milliseconds (default: 25; 40 Hz target)",
+    )
     parser.add_argument("--sync-wait-ms", type=positive_float, default=20.0)
     parser.add_argument("--preview-scale", type=positive_float, default=0.5)
     parser.add_argument("--print-every", type=positive_int, default=1)
