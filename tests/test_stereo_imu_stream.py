@@ -35,7 +35,7 @@ from typing import Any
 
 import cv2
 import numpy as np
-from arducam_uvc_stereo_sdk import OpenCvBackend, open_device, scan_devices
+from arducam_uvc_stereo_sdk import OpenCvBackend, convert_imu, open_device, scan_devices
 
 
 @dataclass(frozen=True)
@@ -71,6 +71,7 @@ class ImuSampler:
 
     def __init__(self, device: Any, interval_ms: float, max_samples: int = 4096) -> None:
         self.device = device
+        self.convert_imu = getattr(device, "convert_imu", convert_imu)
         self.interval_sec = float(interval_ms) / 1000.0
         self.samples: deque[ImuSample] = deque(maxlen=max_samples)
         self.condition = threading.Condition()
@@ -88,7 +89,7 @@ class ImuSampler:
             while not self.stop_event.is_set():
                 loop_start = time.monotonic()
                 raw = self.device.read_imu()
-                converted = self.device.convert_imu(raw)
+                converted = self.convert_imu(raw)
                 sample = ImuSample(
                     host_timestamp_ns=int(raw.host_timestamp_ns),
                     imu_timestamp_raw=int(raw.imu_timestamp_raw),
