@@ -7,9 +7,10 @@ then starts all three MJPEG streams together:
 - head stereo: 3840x1200 MJPEG at 30 FPS, IMU targeted at 100 Hz
 - two wrist cameras: 1920x1080 MJPEG at 30 FPS, IMUs targeted at 40 Hz
 
-The head must use a different USB bus from both wrists. The wrists may share a
-bus. This does not exercise the packaged executable, FFmpeg/DirectShow capture,
-or MCAP writing.
+The head must use a different USB root from both wrists. The wrists may share a
+root. Linux identifies roots by USB bus number; Windows uses PnP root-hub IDs.
+This does not exercise the packaged executable, FFmpeg/DirectShow capture, or
+MCAP writing.
 """
 
 from __future__ import annotations
@@ -88,21 +89,16 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def validate_usb_layout(head_bus: Any, wrist_buses: list[Any]) -> None:
-    if head_bus in wrist_buses:
+def validate_usb_layout(head_root: str, wrist_roots: list[str]) -> None:
+    if head_root in wrist_roots:
         raise RuntimeError(
-            f"head camera must have its own USB bus; head is on bus {head_bus}, "
-            f"wrists are on buses {wrist_buses[0]} and {wrist_buses[1]}"
+            f"head camera must have its own USB root; head is on {head_root}, "
+            f"wrists are on {wrist_roots[0]} and {wrist_roots[1]}"
         )
 
 
-def _windows_usb_controller_id(device_path: str) -> str | None:
-    """Resolve the PCI host controller instance ID behind an SDK device path.
-
-    The SDK reports bus_number as 0 on Windows, so walk the PnP parent chain
-    (device interface -> composite device -> hubs -> root hub -> controller)
-    with cfgmgr32 instead.
-    """
+def _windows_usb_root_hub_id(device_path: str) -> str | None:
+    """Resolve the Windows USB root-hub instance ID for an SDK device path."""
     parts = str(device_path).split("#")
     if len(parts) < 3:
         return None
@@ -125,20 +121,20 @@ def _windows_usb_controller_id(device_path: str) -> str | None:
         devinst = parent
         if cfgmgr.CM_Get_Device_IDW(devinst, buffer, len(buffer), 0) != 0:
             return None
-        if buffer.value.upper().startswith("PCI\\"):
-            return buffer.value
+        if buffer.value.upper().startswith("USB\\ROOT_HUB"):
+            return buffer.value.upper()
     return None
 
 
-def _usb_bus_id(device: Any) -> Any:
-    bus = int(device.bus_number)
-    if bus:
-        return bus
+def _usb_root_id(device: Any) -> str:
     if sys.platform == "win32":
-        controller = _windows_usb_controller_id(str(device.device_path))
-        if controller is not None:
-            return controller
-    return 0
+        root = _windows_usb_root_hub_id(str(device.device_path))
+    else:
+        bus = int(device.bus_number)
+        root = f"usb-bus:{bus}" if bus else None
+    if root is None:
+        raise RuntimeError(f"could not determine USB root for {device.device_path}")
+    return root
 
 
 def scan_camera_devices() -> tuple[Any, list[Any]]:
@@ -198,19 +194,13 @@ def scan_camera_devices() -> tuple[Any, list[Any]]:
             f"found {len(heads)} head and {len(wrists)} wrist"
         )
 
-    head_bus = _usb_bus_id(heads[0])
-    wrist_buses = [_usb_bus_id(device) for device in wrists]
-    if not head_bus and not any(wrist_buses):
-        print(
-            "[WARN] USB bus information is unavailable; skipping USB layout validation",
-            file=sys.stderr,
-        )
-    else:
-        validate_usb_layout(head_bus, wrist_buses)
-        print(
-            f"USB layout: head bus {head_bus}; wrist buses "
-            f"{wrist_buses[0]} and {wrist_buses[1]}"
-        )
+    head_root = _usb_root_id(heads[0])
+    wrist_roots = [_usb_root_id(device) for device in wrists]
+    validate_usb_layout(head_root, wrist_roots)
+    print(
+        f"USB layout: head root {head_root}; wrist roots "
+        f"{wrist_roots[0]} and {wrist_roots[1]}"
+    )
     wrists.sort(key=lambda device: str(device.device_path).casefold())
     return heads[0], wrists
 
@@ -676,14 +666,14 @@ def run_full_load(args: argparse.Namespace) -> None:
 
 
 def self_test() -> None:
-    validate_usb_layout(5, [1, 1])
-    validate_usb_layout(5, [1, 3])
+    validate_usb_layout("usb-bus:5", ["usb-bus:1", "usb-bus:1"])
+    validate_usb_layout("usb-bus:5", ["usb-bus:1", "usb-bus:3"])
     try:
-        validate_usb_layout(1, [1, 3])
+        validate_usb_layout("usb-bus:1", ["usb-bus:1", "usb-bus:3"])
     except RuntimeError as exc:
-        assert "must have its own USB bus" in str(exc)
+        assert "must have its own USB root" in str(exc)
     else:
-        raise AssertionError("shared head/wrist USB bus passed validation")
+        raise AssertionError("shared head/wrist USB root passed validation")
     print("Self-test passed.")
 
 
