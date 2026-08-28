@@ -24,6 +24,7 @@ from arducam_uvc_stereo_sdk import DeviceCapability, open_device
 from test_stereo_imu_stream import (
     ImuHealthCheck,
     ImuSampler,
+    open_device_with_retry,
     SynchronizedImu,
     VideoPacket,
     format_stream_line,
@@ -128,6 +129,12 @@ def parse_args() -> argparse.Namespace:
         default=0,
         help="Stop after N frames; zero streams until interrupted",
     )
+    parser.add_argument(
+        "--warmup-frames",
+        type=nonnegative_int,
+        default=30,
+        help="Discard N frames before the FPS measurement starts (default: 30)",
+    )
     return parser.parse_args()
 
 
@@ -140,13 +147,16 @@ def main() -> int:
     )
 
     # Wrist cameras do not need flash transport in production.
-    sdk_device = open_device(dev, DeviceCapability(0))
+    sdk_device = open_device_with_retry(dev, DeviceCapability(0))
 
     imu = ImuSampler(sdk_device, interval_ms=args.imu_interval_ms)
     imu_health = ImuHealthCheck()
     capture: cv2.VideoCapture | None = None
     frame_count = 0
     captured_count = 0
+    # The first frames after opening a UVC stream arrive slowly (auto-exposure
+    # settling, pipeline warm-up) and would drag the measured FPS down.
+    warmup_remaining = args.warmup_frames
     first_timestamp_ns: int | None = None
     last_timestamp_ns: int | None = None
     try:
@@ -161,7 +171,8 @@ def main() -> int:
         print(
             f"Streaming {args.width}x{args.height}@{args.fps} through OpenCV "
             f"{backend.name} index {camera_index}, with IMU polling every "
-            f"{args.imu_interval_ms:g} ms."
+            f"{args.imu_interval_ms:g} ms.",
+            flush=True,
         )
         if not args.headless:
             print("Press q or Esc in the preview window to stop.")
@@ -178,6 +189,9 @@ def main() -> int:
                     f"decoded frame is {frame.shape[1]}x{frame.shape[0]}, "
                     f"expected {args.width}x{args.height}"
                 )
+            if warmup_remaining > 0:
+                warmup_remaining -= 1
+                continue
             if first_timestamp_ns is None:
                 first_timestamp_ns = packet.timestamp_ns
             last_timestamp_ns = packet.timestamp_ns

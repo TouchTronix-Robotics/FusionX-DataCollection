@@ -7,14 +7,16 @@ then starts all three MJPEG streams together:
 - head stereo: 3840x1200 MJPEG at 30 FPS, IMU targeted at 100 Hz
 - two wrist cameras: 1920x1080 MJPEG at 30 FPS, IMUs targeted at 40 Hz
 
-The head must use a different USB bus from both wrists. The wrists may share a
-bus. This does not exercise the packaged executable, FFmpeg/DirectShow capture,
-or MCAP writing.
+The head must use a different USB root from both wrists. The wrists may share a
+root. Linux identifies roots by USB bus number; Windows uses PnP root-hub IDs.
+This does not exercise the packaged executable, FFmpeg/DirectShow capture, or
+MCAP writing.
 """
 
 from __future__ import annotations
 
 import argparse
+import ctypes
 import json
 import math
 import subprocess
@@ -39,7 +41,9 @@ HEAD_PID = 0x0234
 WRIST_PID = 0x2502
 FPS = 30
 MIN_SANE_IMU_RATIO = 0.9
-SCAN_ATTEMPTS = 3
+# A camera probed by a recent scan (this process or another) can stay missing
+# from rescans for several seconds, so three attempts is not always enough.
+SCAN_ATTEMPTS = 15
 SCAN_RETRY_DELAY_SECONDS = 1.0
 
 
@@ -85,12 +89,52 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def validate_usb_layout(head_bus: int, wrist_buses: list[int]) -> None:
-    if head_bus in wrist_buses:
+def validate_usb_layout(head_root: str, wrist_roots: list[str]) -> None:
+    if head_root in wrist_roots:
         raise RuntimeError(
-            f"head camera must have its own USB bus; head is on bus {head_bus}, "
-            f"wrists are on buses {wrist_buses[0]} and {wrist_buses[1]}"
+            f"head camera must have its own USB root; head is on {head_root}, "
+            f"wrists are on {wrist_roots[0]} and {wrist_roots[1]}"
         )
+
+
+def _windows_usb_root_hub_id(device_path: str) -> str | None:
+    """Resolve the Windows USB root-hub instance ID for an SDK device path."""
+    parts = str(device_path).split("#")
+    if len(parts) < 3:
+        return None
+    enumerator = parts[0].rsplit("\\", 1)[-1]
+    instance_id = "\\".join((enumerator, parts[1], parts[2])).upper()
+    try:
+        cfgmgr = ctypes.WinDLL("cfgmgr32")
+    except OSError:
+        return None
+    devinst = ctypes.c_uint32()
+    if cfgmgr.CM_Locate_DevNodeW(
+        ctypes.byref(devinst), ctypes.c_wchar_p(instance_id), 0
+    ) != 0:
+        return None
+    buffer = ctypes.create_unicode_buffer(512)
+    for _ in range(10):
+        parent = ctypes.c_uint32()
+        if cfgmgr.CM_Get_Parent(ctypes.byref(parent), devinst, 0) != 0:
+            return None
+        devinst = parent
+        if cfgmgr.CM_Get_Device_IDW(devinst, buffer, len(buffer), 0) != 0:
+            return None
+        if buffer.value.upper().startswith("USB\\ROOT_HUB"):
+            return buffer.value.upper()
+    return None
+
+
+def _usb_root_id(device: Any) -> str:
+    if sys.platform == "win32":
+        root = _windows_usb_root_hub_id(str(device.device_path))
+    else:
+        bus = int(device.bus_number)
+        root = f"usb-bus:{bus}" if bus else None
+    if root is None:
+        raise RuntimeError(f"could not determine USB root for {device.device_path}")
+    return root
 
 
 def scan_camera_devices() -> tuple[Any, list[Any]]:
@@ -150,12 +194,12 @@ def scan_camera_devices() -> tuple[Any, list[Any]]:
             f"found {len(heads)} head and {len(wrists)} wrist"
         )
 
-    head_bus = int(heads[0].bus_number)
-    wrist_buses = [int(device.bus_number) for device in wrists]
-    validate_usb_layout(head_bus, wrist_buses)
+    head_root = _usb_root_id(heads[0])
+    wrist_roots = [_usb_root_id(device) for device in wrists]
+    validate_usb_layout(head_root, wrist_roots)
     print(
-        f"USB layout: head bus {head_bus}; wrist buses "
-        f"{wrist_buses[0]} and {wrist_buses[1]}"
+        f"USB layout: head root {head_root}; wrist roots "
+        f"{wrist_roots[0]} and {wrist_roots[1]}"
     )
     wrists.sort(key=lambda device: str(device.device_path).casefold())
     return heads[0], wrists
@@ -215,11 +259,22 @@ def imu_worker(device_json: str, poll_interval_ms: float, read_calibration: bool
             if read_calibration
             else sdk.DeviceCapability(0)
         )
-        device = sdk.open_device(info, capabilities)
-        if read_calibration:
-            version, text = device.read_json()
-            json.loads(text)
-            _emit({"type": "calibration", "version": int(version)})
+        # Opening (which re-scans internally) and flash reads can fail for a
+        # few seconds after another process probed this camera, so retry.
+        open_deadline = time.monotonic() + 30.0
+        while True:
+            try:
+                device = sdk.open_device(info, capabilities)
+                if read_calibration:
+                    version, text = device.read_json()
+                    json.loads(text)
+                    _emit({"type": "calibration", "version": int(version)})
+                break
+            except Exception:
+                device = None
+                if time.monotonic() >= open_deadline:
+                    raise
+                time.sleep(1.0)
 
         device.open_imu()
         _emit({"type": "ready"})
@@ -468,6 +523,11 @@ def _capture_video(
                 f"warm-up frame is {frame.shape[1]}x{frame.shape[0]}, "
                 f"expected {size[0]}x{size[1]}"
             )
+        # The first frames after opening a UVC stream arrive slowly
+        # (auto-exposure settling, pipeline warm-up) and would drag the
+        # measured FPS down, so discard about a second of frames first.
+        for _ in range(FPS):
+            capture.grab()
         print(
             f"{label}: ready {size[0]}x{size[1]}@{FPS} through "
             f"OpenCV {backend.name} index {camera_index}"
@@ -606,14 +666,14 @@ def run_full_load(args: argparse.Namespace) -> None:
 
 
 def self_test() -> None:
-    validate_usb_layout(5, [1, 1])
-    validate_usb_layout(5, [1, 3])
+    validate_usb_layout("usb-bus:5", ["usb-bus:1", "usb-bus:1"])
+    validate_usb_layout("usb-bus:5", ["usb-bus:1", "usb-bus:3"])
     try:
-        validate_usb_layout(1, [1, 3])
+        validate_usb_layout("usb-bus:1", ["usb-bus:1", "usb-bus:3"])
     except RuntimeError as exc:
-        assert "must have its own USB bus" in str(exc)
+        assert "must have its own USB root" in str(exc)
     else:
-        raise AssertionError("shared head/wrist USB bus passed validation")
+        raise AssertionError("shared head/wrist USB root passed validation")
     print("Self-test passed.")
 
 

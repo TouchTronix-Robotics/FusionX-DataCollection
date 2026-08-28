@@ -334,39 +334,74 @@ def select_sdk_device(
     device_index: int,
     serial: str | None,
     device_path: str | None,
+    retry_seconds: float = 20.0,
 ) -> Any:
-    devices = scan_devices()
-    if not devices:
-        raise RuntimeError("no compatible Arducam UVC devices found")
+    # scan_devices() briefly opens every camera to probe it, so a camera that
+    # was probed by a recent scan (this process or another) can be missing from
+    # the next scan for a few seconds. Rescan until the wanted device appears.
+    deadline = time.monotonic() + retry_seconds
+    last_error: Exception | None = None
+    while True:
+        devices: list[Any] = []
+        try:
+            devices = scan_devices()
+            if not devices:
+                raise RuntimeError("no compatible Arducam UVC devices found")
 
-    for index, dev in enumerate(devices):
-        print(
-            f"device[{index}]: vid=0x{dev.vid:04x} pid=0x{dev.pid:04x} "
-            f"node={dev.video_node} serial={dev.serial_number or '(none)'} "
-            f"product={dev.product} path={dev.device_path}"
-        )
+            for index, dev in enumerate(devices):
+                try:
+                    print(
+                        f"device[{index}]: vid=0x{dev.vid:04x} pid=0x{dev.pid:04x} "
+                        f"node={dev.video_node} serial={dev.serial_number or '(none)'} "
+                        f"product={dev.product} path={dev.device_path}"
+                    )
+                except Exception:
+                    print(f"device[{index}]: (unreadable device info)")
 
-    if device_path is not None:
-        matches = [
-            dev
-            for dev in devices
-            if str(dev.device_path).casefold() == device_path.casefold()
-        ]
-        if not matches:
-            raise RuntimeError(f"no Arducam camera has device path {device_path!r}")
-        return matches[0]
+            if device_path is not None:
+                matches = [
+                    dev
+                    for dev in devices
+                    if str(dev.device_path).casefold() == device_path.casefold()
+                ]
+                if not matches:
+                    raise RuntimeError(
+                        f"no Arducam camera has device path {device_path!r}"
+                    )
+                return matches[0]
 
-    if serial is not None:
-        matches = [dev for dev in devices if dev.serial_number == serial]
-        if not matches:
-            raise RuntimeError(f"no Arducam camera has serial number {serial!r}")
-        return matches[0]
+            if serial is not None:
+                matches = [dev for dev in devices if dev.serial_number == serial]
+                if not matches:
+                    raise RuntimeError(
+                        f"no Arducam camera has serial number {serial!r}"
+                    )
+                return matches[0]
 
-    if device_index < 0 or device_index >= len(devices):
-        raise RuntimeError(
-            f"device index {device_index} is invalid; found {len(devices)} device(s)"
-        )
-    return devices[device_index]
+            if device_index < 0 or device_index >= len(devices):
+                raise RuntimeError(
+                    f"device index {device_index} is invalid; "
+                    f"found {len(devices)} device(s)"
+                )
+            return devices[device_index]
+        except Exception as exc:
+            last_error = exc
+            if time.monotonic() >= deadline:
+                raise RuntimeError(f"device scan kept failing: {last_error}")
+            time.sleep(1.0)
+
+
+def open_device_with_retry(dev: Any, *open_args: Any, retry_seconds: float = 20.0) -> Any:
+    # open_device() re-scans internally by device path, so it can fail while a
+    # concurrent process is scanning or opening another camera. Retry briefly.
+    deadline = time.monotonic() + retry_seconds
+    while True:
+        try:
+            return open_device(dev, *open_args)
+        except Exception:
+            if time.monotonic() >= deadline:
+                raise
+            time.sleep(1.0)
 
 
 def capture_fourcc(capture: cv2.VideoCapture) -> str | None:
@@ -380,6 +415,25 @@ def capture_fourcc(capture: cv2.VideoCapture) -> str | None:
 
 
 def open_opencv_capture(
+    device: Any,
+    width: int,
+    height: int,
+    fps: int,
+    retry_seconds: float = 20.0,
+) -> tuple[cv2.VideoCapture, OpenCvBackend, int]:
+    # A camera can refuse to open for a few seconds while a previous process's
+    # capture teardown or an SDK scan probe is still releasing it. Retry briefly.
+    deadline = time.monotonic() + retry_seconds
+    while True:
+        try:
+            return _open_opencv_capture_once(device, width, height, fps)
+        except Exception:
+            if time.monotonic() >= deadline:
+                raise
+            time.sleep(1.0)
+
+
+def _open_opencv_capture_once(
     device: Any,
     width: int,
     height: int,
@@ -608,6 +662,12 @@ def parse_args() -> argparse.Namespace:
         default=0,
         help="Stop after N frames; zero streams until interrupted",
     )
+    parser.add_argument(
+        "--warmup-frames",
+        type=nonnegative_int,
+        default=30,
+        help="Discard N frames before the FPS measurement starts (default: 30)",
+    )
     return parser.parse_args()
 
 
@@ -624,12 +684,23 @@ def main() -> int:
             "[WARN] Skipping stereo flash calibration; testing video and IMU only.",
             file=sys.stderr,
         )
-        sdk_device = open_device(dev, DeviceCapability(0))
+        sdk_device = open_device_with_retry(dev, DeviceCapability(0))
         stream_width, stream_height = DEFAULT_STEREO_SIZE
     else:
         # Default open options require flash transport, catching missing raw USB permissions.
-        sdk_device = open_device(dev)
-        version, calibration_json = sdk_device.read_json()
+        # A flash read right after another process probed this camera can fail
+        # ("flash magic mismatch"), so reopen the device and retry briefly.
+        flash_deadline = time.monotonic() + 20.0
+        while True:
+            sdk_device = open_device_with_retry(dev)
+            try:
+                version, calibration_json = sdk_device.read_json()
+                break
+            except Exception:
+                del sdk_device
+                if time.monotonic() >= flash_deadline:
+                    raise
+                time.sleep(1.0)
         payload, calibration = parse_calibration(calibration_json)
         print_calibration(
             version,
@@ -651,6 +722,9 @@ def main() -> int:
 
     frame_count = 0
     captured_count = 0
+    # The first frames after opening a UVC stream arrive slowly (auto-exposure
+    # settling, pipeline warm-up) and would drag the measured FPS down.
+    warmup_remaining = args.warmup_frames
     first_timestamp_ns: int | None = None
     last_timestamp_ns: int | None = None
     try:
@@ -666,7 +740,8 @@ def main() -> int:
         print(
             f"Streaming {stream_width}x{stream_height}@{args.fps} "
             f"through OpenCV {backend.name} index {camera_index}, "
-            f"with IMU polling every {args.imu_interval_ms:g} ms."
+            f"with IMU polling every {args.imu_interval_ms:g} ms.",
+            flush=True,
         )
         if not args.headless:
             print("Press q or Esc in the preview window to stop.")
@@ -686,6 +761,9 @@ def main() -> int:
                     f"decoded frame is {frame.shape[1]}x{frame.shape[0]}, "
                     f"expected {stream_width}x{stream_height}"
                 )
+            if warmup_remaining > 0:
+                warmup_remaining -= 1
+                continue
             if first_timestamp_ns is None:
                 first_timestamp_ns = packet.timestamp_ns
             last_timestamp_ns = packet.timestamp_ns
