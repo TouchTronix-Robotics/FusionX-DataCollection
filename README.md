@@ -1,74 +1,209 @@
-# FusionX-DataCollection
+# TouchTronix FusionX Glove SDK
 
-Multimodal data collection tools for synchronized OAK-D stereo video and tactile glove streams.
+Python API, examples, and physical sensor diagrams for **V2 conductive-fabric gloves**.
 
-Download standalone app assets from the [Releases](https://github.com/TouchTronix-Robotics/FusionX-DataCollection/releases) page. Each platform now has one unified FusionX GUI application rather than separate desktop and miniPC builds. The same application opens as a fullscreen touch interface by default; launch it with `--windowed` for desktop use. A separate headless CLI recorder is also available. Python SDK wheel packages are provided separately on request.
+## Daily Use and Maintenance
 
-Standalone Foxglove Desktop viewer files are available directly from this repository:
+- **Contact technical support if you encounter product issues.** Do not disassemble the glove without authorization.
+  The manufacturer is not responsible for damage caused by unauthorized disassembly.
+- **Avoid direct contact between sharp objects and the sensors.**
+- **Do not pull connection cables forcefully.** This helps preserve the product's service life.
+- **Regularly inspect the glove's condition and operation.** If you find damage or abnormalities,
+  stop using it immediately and contact qualified service personnel to arrange factory inspection and repair.
+- **Clean the surface with a soft, dry cloth.** Avoid cleaners containing corrosive chemical solvents.
+- **Avoid excessive pressure on the main control board** to prevent damage to internal components.
+- **Wearing medical nitrile gloves underneath is recommended** for additional protection and to help extend the sensing
+  gloves' service life.
 
-- [`touchtronixrobotics.fusionx-tactile-panel-0.2.3.foxe`](touchtronixrobotics.fusionx-tactile-panel-0.2.3.foxe) — self-contained FusionX tactile panel extension.
-- [`fusionx_foxglove_layout.json`](fusionx_foxglove_layout.json) — camera, tactile, OAK IMU, and LH/RH glove IMU workspace.
+## SDK Overview
 
-Install the extension before importing the layout. Neither file requires the application source tree, Node.js, or npm.
+- SDK package version: **0.2.0**. The branch name `v2-conductive-fabric` identifies the glove configuration, not the
+  Python package version.
+- TouchTronix supplies compiled SDK wheels directly to customers. This repository provides documentation, examples,
+  and sensor diagrams.
+- Older SDK/app instructions and camera tools remain on
+  [`v1-conductive-fabric`](https://github.com/TouchTronix-Robotics/FusionX-DataCollection/tree/v1-conductive-fabric).
 
-Choose the instructions for the package you are using:
+## Install
 
-- [Standalone app README](README-standalone-app.md) — unified fullscreen/windowed GUI, CLI recording, Foxglove playback, one-time Ubuntu miniPC setup, and offline post-processing.
-- [Python SDK README](README-sdk.md) — install a provided `tactile_glove` wheel package and read tactile glove data directly from Python.
+Use the SDK wheel (`.whl` file) supplied by TouchTronix for your Python version, operating system, and CPU architecture.
+Contact TouchTronix if you need an SDK package or a different build. The current build targets are **Python 3.12,
+Linux x86_64, and Windows x86_64**. Hardware/driver compatibility must also be verified on your deployment machine.
 
-## Test Cameras
+**Recommended Linux platform:** Ubuntu 22.04 LTS on a 64-bit Intel/AMD machine, with Python 3.12.
 
-The camera/IMU tests use OpenCV and the Arducam SDK. From the repository root, install their dependencies into your Python environment:
-
-```bash
-python -m pip install arducam-uvc-stereo-sdk==0.3.0 "numpy>=2,<3" opencv-python==4.13.0.92 "pytest>=7"
-```
-
-Test a stereo camera:
-
-```bash
-python tests/test_stereo_imu_stream.py
-```
-
-Test a monocular wrist camera at the default 1920x1080 resolution:
-
-```bash
-python tests/test_wrist_imu_stream.py
-```
-
-Press `q` or `Esc` to stop. Add `--serial SERIAL` when multiple Arducam cameras are connected. When serials are duplicated, use the printed Windows SDK USB instance path with `--device-path "PATH"`.
-
-For a repeatable headless test of video, IMU, and sustained frame rate, capture 301 frames while limiting console output. The stereo test also validates its flash calibration:
+Linux, from the directory containing your wheel:
 
 ```bash
-python tests/test_stereo_imu_stream.py --headless --max-frames 301 --print-every 300
-python tests/test_wrist_imu_stream.py --headless --max-frames 301 --print-every 300
+python3.12 -m venv .venv
+source .venv/bin/activate
+python -m pip install ./touchtronix_glove-0.2.0-cp312-cp312-linux_x86_64.whl
 ```
 
-Both tests report measured FPS and fail below 95 percent of the requested rate. Use `--min-fps` to set a different
-requirement. The head test targets 100 Hz IMU polling, while the 1080p wrist test targets 40 Hz. They also require at
-least 90 percent sane frame-paired IMU samples with a nonzero, advancing raw timestamp. A known non-MJPEG negotiated
-mode fails; an unknown FOURCC produces a warning because some OpenCV backends do not report it.
+Windows PowerShell:
 
-After the stereo camera and each wrist camera pass individually, connect one stereo and two wrist cameras and run the
-combined hardware-load diagnostic:
+```powershell
+py -3.12 -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install .\touchtronix_glove-0.2.0-cp312-cp312-win_amd64.whl
+```
+
+## Quick start
+
+```python
+from touchtronix_glove import GloveReader
+
+# One port string also works. On Windows use, for example, ["COM3", "COM4"].
+with GloveReader(["/dev/ttyACM0", "/dev/ttyACM1"]) as gloves:
+    frame = next(gloves.stream())
+    print(frame.hand)                     # "lh" or "rh", reported by the device
+    print(frame.tactile.index[2][1])      # blue cell in the diagrams below
+    print(frame.tactile.palm[1][4])       # palm: row 1, column 4
+    print(frame.bend.thumb)               # (thumb pad, dorsal/back-of-hand sensor)
+    print(frame.imu.quaternion)           # (w, x, y, z)
+```
+
+The context manager opens and closes the ports, including when an exception or interrupt occurs. Hand identity comes
+from the device, never from port argument order. The connection speed is **6,000,000 baud**.
+
+## Glove configuration: locate an SDK value
+
+### Left glove — `frame.hand == "lh"`
+
+![Left glove: fingertip and palm SDK row/column indices, bend channels, and a separate dorsal inset](docs/glove-map-lh.png)
+
+### Right glove — `frame.hand == "rh"`
+
+![Right glove: fingertip and palm SDK row/column indices, bend channels, and a separate dorsal inset](docs/glove-map-rh.png)
+
+## GloveReader
+
+```python
+from touchtronix_glove import GloveReader
+
+reader = GloveReader("/dev/ttyACM0", baudrate=6_000_000)
+```
+
+| Argument | Type / default | Meaning |
+|---|---|---|
+| `port` | `str` or a sequence of one/two strings | Explicit serial port names; empty names are rejected. |
+| `baudrate` | `int`, default `6_000_000` | Serial connection speed; setup is handled by the serial backend. |
+
+These are the only configuration options. The SDK uses this glove's fixed format, automatic handedness, and a fixed
+0.1-second read wait budget (not a sensor sampling interval).
+
+Linux port examples: `/dev/ttyACM0`, `/dev/ttyACM1`; Windows: `COM3`, `COM4`. Ports are not auto-scanned. With two ports,
+both streams get opportunities to deliver frames; a silent port does not stall its sibling. Streams are neither
+synchronized nor globally sorted by timestamp.
+
+| Operation | Result / behavior |
+|---|---|
+| `connect()` | Opens the ports; setup failure closes ports already opened. Connecting twice raises `RuntimeError`. |
+| `disconnect()` | Closes ports and clears pending partial input. Repeated calls are safe. |
+| `read_frame()` | Returns a complete `GloveFrame` or `None` if none completes within the wait budget. May wait; it is not a zero-wait polling API. Reading before connecting raises `RuntimeError`. |
+| `stream()` | Iterator yielding every complete frame without resampling or deduplication. Skips `None` results, not sensor samples. |
+| `with GloveReader(...) as reader:` | Connects on entry and disconnects on exit. |
+
+The reader is synchronous and single-consumer: do not read the same instance concurrently from multiple threads.
+It starts no background worker. The example's acquisition worker and viewer are separate from the SDK reader.
+
+## GloveFrame
+
+An immutable snapshot returned by `read_frame()` or `stream()`. Sensor arrays are Python tuples.
+Named tactile/bend fields and all listed IMU channels are populated for this V2 glove configuration, the only
+configuration supported by this SDK.
+
+```python
+from touchtronix_glove import GloveFrame, TactileData, BendData, IMUData
+```
+
+| Field / property | Type | Meaning |
+|---|---|---|
+| `hand` | `str` | `"lh"` or `"rh"`; use to route values to the physical hand. |
+| `tactile` | `TactileData` | Named fingertip and palm measurements. |
+| `bend` | `BendData` | Named pad/dorsal channels. |
+| `imu` | `IMUData` | Device orientation and motion measurements. |
+| `host_timestamp_ns` | `int` | Unix host read-completion time in nanoseconds, not the sensor acquisition time. |
+| `timestamp` | `float` | The same host time in seconds: `host_timestamp_ns / 1_000_000_000`. |
+
+### TactileData
+
+All populated readings are **raw integers from 0 to 255**, not calibrated pressure or force. The SDK does not apply
+baseline subtraction, force conversion, or normalization.
+
+| Field | Shape / element type | Physical meaning |
+|---|---|---|
+| `thumb`, `index`, `middle`, `ring`, `little` | 4×3 nested tuples of `int` | Corresponding finger's tactile patch. |
+| `palm` | 5×15 nested tuples of `int \| None` | Palm patch: 72 populated cells, three absent positions. |
+
+Access matrices as `frame.tactile.<field>[row][column]`. Absent palm cells:
+
+- LH: `palm[0][0]`, `palm[0][1]`, `palm[0][2]` are `None`.
+- RH: `palm[0][12]`, `palm[0][13]`, `palm[0][14]` are `None`.
+
+Only the three absent palm cells are `None`; the named sensor patches are populated.
+
+### BendData
+
+Every field is an immutable **two-value tuple**, with raw 0–255 readings:
+
+| Field | `[0]` | `[1]` |
+|---|---|---|
+| `thumb` | Thumb finger pad | Dorsal/back-of-hand sensor |
+| `index`, `middle`, `ring`, `little` | Upper finger pad, nearer the fingertip | Lower finger pad, nearer the palm |
+
+```python
+thumb_pad, dorsal = frame.bend.thumb
+upper_pad, lower_pad = frame.bend.index
+```
+
+`bend.thumb[1]` is **not a second physical thumb pad**. The sensor is on the back of the hand, where motion associated
+with the thumb's second degree of freedom is better measured. The grouping keeps all five tuple shapes consistent.
+These readings are not calibrated bend angles.
+
+### IMUData
+
+| Field | Python tuple order | Meaning / units |
+|---|---|---|
+| `quaternion` | `(w, x, y, z)` | Device orientation quaternion, retained without normalization. |
+| `gyro` | `(x, y, z)` | Angular velocity; firmware convention rad/s. |
+| `accel` | `(x, y, z)` | Acceleration including gravity; firmware convention m/s². |
+| `magnetometer` | `(x, y, z)` | Magnetic-field readings; vendor units unspecified. |
+
+## Streaming example and optional viewer
+
+With a matching wheel installed, run from this repository's root:
 
 ```bash
-python tests/test_full_camera_load.py --seconds 30
+python examples/stream_glove.py /dev/ttyACM0
+python examples/stream_glove.py /dev/ttyACM0 /dev/ttyACM1 --seconds 30
 ```
 
-This tests 3840x1200 stereo MJPEG at 30 FPS with test-specific 10 ms head-IMU polling (a 100 Hz target), plus two
-1920x1080 wrist MJPEG streams at 30 FPS with test-specific 25 ms wrist-IMU polling (a 40 Hz target). It fails if the
-required camera topology is missing, the stereo calibration fails, or any stream fails its frame-rate, video, or IMU
-checks.
-It does not test the packaged executable, its FFmpeg/DirectShow capture path, or MCAP writing.
+On Windows, use `python examples\stream_glove.py COM3 COM4 --seconds 30`. The terminal reports counts, mean delivery
+rates, and frame age, not complete sensor arrays. Press Ctrl+C to stop. There is no `--hand` CLI argument.
 
-To run the stereo test, both wrist tests, and the combined load test sequentially through pytest:
+Viewer dependencies are already included in the normal SDK installation. To view live data:
 
 ```bash
-python -m pytest tests/test_camera_hardware.py -v -s
+python examples/stream_glove.py /dev/ttyACM0 /dev/ttyACM1 --viewer
 ```
 
-The suite requires exactly one stereo camera and two wrist cameras and normally takes a few minutes.
+Keep `glove_viewer.py` beside `stream_glove.py`. Both hands have
+fingertip/palm heatmaps, bend bars, and compact IMU plots. Palm axes use the graph's zero-based indices. Blue bend bars
+show `[0]`, orange bars `[1]`; the orange thumb bar is dorsal. Absent palm cells are blank; stale displays dim.
 
-The Arducam SDK currently provides Windows and Linux packages; macOS is not supported.
+Acquisition runs on a separate worker. Preview history is bounded, and display refresh does not set acquisition cadence.
+Actual delivery still depends on the hardware, host load, and buffering. Read errors propagate instead of being silently
+ignored. Closing the viewer or pressing Ctrl+C stops acquisition and closes resources.
+
+The example only streams and optionally displays data; it does not save files. Use `GloveReader` in your application to
+process or store the decoded fields with `frame.hand` and `frame.host_timestamp_ns`. Transport byte buffers are not
+exposed by the API.
+
+## Serial access and troubleshooting
+
+- On Linux, inspect `ls -l /dev/ttyACM* /dev/ttyUSB*` and `groups`. If permission is denied, join the device's access group
+  (usually `dialout` on Ubuntu, or `uucp` elsewhere), then log out and back in. For an Ubuntu device owned by `dialout`:
+  `sudo usermod -aG dialout "$USER"`. Avoid `sudo python`, which can use a different environment.
+- On Windows, check Device Manager for COM ports and install the hardware vendor's driver if necessary.
+- Close any other application using the same port. Confirm the connection supports the configured speed.
