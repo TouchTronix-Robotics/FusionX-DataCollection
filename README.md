@@ -24,7 +24,7 @@ Python API, examples, and physical sensor diagrams for **V2 conductive-fabric gl
 - Older SDK/app instructions and camera tools remain on
   [`v1-conductive-fabric`](https://github.com/TouchTronix-Robotics/FusionX-DataCollection/tree/v1-conductive-fabric).
 
-## Install
+## Quick start
 
 Use the SDK wheel (`.whl` file) supplied by TouchTronix for your Python version, operating system, and CPU architecture.
 Contact TouchTronix if you need an SDK package or a different build. The current build targets are **Python 3.12,
@@ -38,17 +38,25 @@ Linux, from the directory containing your wheel:
 python3.12 -m venv .venv
 source .venv/bin/activate
 python -m pip install ./touchtronix_glove-0.2.0-cp312-cp312-linux_x86_64.whl
+git clone --branch v2-conductive-fabric https://github.com/TouchTronix-Robotics/FusionX-DataCollection.git
+cd FusionX-DataCollection
+python examples/stream_glove.py /dev/ttyACM0 /dev/ttyACM1 --viewer
 ```
 
-Windows PowerShell:
+Windows PowerShell, from the directory containing your wheel:
 
 ```powershell
 py -3.12 -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install .\touchtronix_glove-0.2.0-cp312-cp312-win_amd64.whl
+git clone --branch v2-conductive-fabric https://github.com/TouchTronix-Robotics/FusionX-DataCollection.git
+cd FusionX-DataCollection
+python examples/stream_glove.py COM3 COM4 --viewer
 ```
 
-## Quick start
+Replace the port names with your glove ports. Close the viewer or press Ctrl+C to stop.
+
+## Python API example
 
 ```python
 from touchtronix_glove import GloveReader
