@@ -1,6 +1,10 @@
-# TouchTronix FusionX Glove SDK
+# TouchTronix FusionX Data Collection & Glove SDK
 
-Python API, examples, and physical sensor diagrams for **V2 conductive-fabric gloves**.
+GUI recording instructions, Python API, examples, and physical sensor diagrams for **V2 conductive-fabric gloves**.
+
+- [GUI data collection guide](#gui-data-collection-guide) — connect, calibrate, record, and inspect MCAP files.
+- [SDK quick start](#sdk-quick-start) — stream glove data from Python.
+- [Glove sensor diagrams](#glove-configuration-locate-an-sdk-value) — locate values on each hand.
 
 ## Daily Use and Maintenance
 
@@ -15,6 +19,164 @@ Python API, examples, and physical sensor diagrams for **V2 conductive-fabric gl
 - **Wearing medical nitrile gloves underneath is recommended** for additional protection and to help extend the sensing
   gloves' service life.
 
+## GUI data collection guide
+
+Record synchronized stereo video, glove tactile/bend data, and IMU data into `.mcap` files.
+The five steps below use the **FusionX GUI for V2 conductive-fabric gloves**.
+
+### Before you start
+
+- Use the current **[FusionX GUI v2.2.0](https://github.com/TouchTronix-Robotics/FusionX-DataCollection/releases/tag/v2.2.0)**, with your license key and the force/pressure
+  calibration for your glove pair. This public branch contains documentation and SDK wheels; installing an SDK wheel
+  alone does not install the recording GUI. Older application releases may use different cameras or glove hardware.
+- On **Windows**, extract the complete application archive, then launch its GUI `.exe`. On **Linux**, launch the supplied
+  GUI AppImage; if necessary, mark it executable in the file manager's properties first. Keep any bundled support files
+  beside the application. Enter the license key if prompted.
+- Connect both gloves and the head stereo camera. Close other programs that are using these devices.
+- Create a destination folder on a drive with enough free space for video recordings.
+
+The screenshots were captured from the current Linux GUI with **camera preview disabled**. Windows uses the same
+controls; serial-port names and the native folder/file pickers differ by operating system. The port assignments and
+calibration filenames shown are examples for the pictured setup, not defaults for every machine.
+
+### 1. Select the left and right glove ports
+
+In **LH**, choose the port for the left glove. In **RH**, choose the port for the right glove.
+Use the circular-arrow button to refresh the list after connecting a glove.
+
+| Control | Example in these screenshots | Windows example |
+|---|---|---|
+| **LH** — left glove | `/dev/ttyACM1` | `COM3` |
+| **RH** — right glove | `/dev/ttyACM0` | `COM4` |
+
+Use the ports assigned to **your** gloves; do not choose the same port for both hands. Touch each glove and check that
+its **LH/RH raw heatmap** responds on the correct side. These glove heatmaps are available while idle even when camera
+preview is off.
+
+![Main GUI with LH set to /dev/ttyACM1 and RH set to /dev/ttyACM0; no camera footage](docs/gui/01-glove-ports.png)
+
+The **head stereo camera is detected automatically**; there is no left/right camera-port selection. Allow camera
+initialization to finish before recording. A connected head camera is required. If you also have optional wrist cameras,
+use **Assign Wrists** to identify them from their thumbnails; otherwise leave the wrists unassigned.
+
+### 2. Run the user calibration
+
+Click the orange **Calibrate** button. On the calibration screen:
+
+1. Enter a username using the on-screen keyboard or your physical keyboard. Use a new name to keep an existing calibration.
+2. Click **Start Calibration**.
+3. Follow the on-screen hand-pose images and audio/countdown prompts. First **straighten all fingers and keep the palms
+   relaxed**, without pressing the tactile pads. Hold that pose through the collection cue.
+4. When prompted, **close every finger into a fist, including the thumb**, and hold still through the collection cue.
+5. Wait for **Calibration complete**, then click **Close** to return to the main screen.
+
+![User calibration screen with a username and Start Calibration button](docs/gui/02-calibration-start.png)
+
+The app shows these built-in pose guides during calibration:
+
+| Open hand | Closed fist |
+|---|---|
+| ![Calibration open-hand pose guide](docs/gui/02b-calibration-open.png) | ![Calibration closed-fist pose guide](docs/gui/02c-calibration-fist.png) |
+
+The app saves the user calibration as a JSON file in its `calibrations` folder.
+We recommend recalibrating whenever you put the gloves on again.
+
+### 3. Select the user and force calibrations
+
+Back on the main screen, open each dropdown and select the files for this session:
+
+| Dropdown label | What to select |
+|---|---|
+| **User Calibration** | The JSON calibration for the current wearer, created in step 2. |
+| **Glove Calibration** | The supplied **force or pressure calibration for this physical glove pair**. This is the force-calibration selector. |
+
+![User Calibration and Glove Calibration dropdowns with files selected](docs/gui/03-calibrations.png)
+
+Use **Browse** beside either dropdown if the file is stored elsewhere. Check both selections even if the app has
+preselected files.
+Use your own wearer's file and the matching glove-pair calibration.
+
+**Both calibrations must be selected to record calibrated force values.** Raw tactile and bend data are still recorded
+without force conversion.
+
+### 4. Choose where recordings are saved
+
+Click **Save Folder**, navigate to the destination folder, and confirm it in the system's folder picker.
+The status line shows the selected path; hovering over **Save Folder** also shows the full path.
+
+![GUI after selecting a recording destination with Save Folder](docs/gui/04-save-folder.png)
+
+Choose the **final session folder**, for example:
+
+```text
+FusionX_Data/
+  20261007/
+    Tabletop_Task/
+      Collector01_Pair01/   ← select this folder
+```
+
+A location such as `D:\FusionX_Data\...` on Windows or a folder under your home directory on Linux is suitable.
+The `/tmp/` location shown in the screenshot was used only for this demonstration; choose persistent storage for your data.
+**Save Folder chooses the destination; it does not start a recording.**
+
+### 5. Start and stop data collection
+
+1. Check the two glove ports, both calibration selections, and the save folder.
+2. Click **Start Record**. Wait for the status to change from camera startup to **Recording**, and confirm that the head
+   and both glove counters are increasing.
+3. Perform the data-collection task.
+4. Click **Stop Record**. Wait until the app reports **Saved** before opening the output files or disconnecting devices.
+   If it reports an error or missing sensor data, inspect the recording before treating the session as complete.
+
+![Active recording with preview off, showing the timer and increasing head/LH/RH counts](docs/gui/05-recording-preview-off.png)
+
+**Camera preview is optional.** If live view is running, click **Stop Preview** to reduce display/decoding work.
+**Start Preview** turns it back on. Preview can be toggled before or during a recording and does not stop recording
+or disable camera capture. When preview is off during recording, the app shows the recording timer and counters
+instead of video.
+
+**Space** also starts/stops recording from the main window; it is ignored while editing text or using child dialogs.
+
+#### Find and inspect the `.mcap` files
+
+Open the folder selected in step 4. Recordings are saved directly into it:
+
+```text
+Collector01_Pair01/
+  recording_000.mcap
+  recording_001.mcap
+  ...
+```
+
+Long recordings are split automatically into segments, roughly every five minutes at 30 head-camera FPS.
+Starting another recording in the same folder uses the next unused index, preserving earlier files.
+Wait for **Saved** so the files have finished closing.
+
+Use **Foxglove Desktop** for playback:
+
+1. Install [Foxglove Desktop](https://foxglove.dev/download). Opening local files and installing local extensions require
+   a [Foxglove developer seat](https://docs.foxglove.dev/docs/security/seat-types).
+2. Download the [FusionX Tactile 0.3.0 extension](https://raw.githubusercontent.com/TouchTronix-Robotics/FusionX-DataCollection/refs/heads/v2-conductive-fabric/touchtronixrobotics.fusionx-tactile-panel-0.3.0.foxe) and the
+   [FusionX layout](https://raw.githubusercontent.com/TouchTronix-Robotics/FusionX-DataCollection/refs/heads/v2-conductive-fabric/fusionx_foxglove_layout.json) from the public repository.
+3. Open or drag the `.foxe` file into Foxglove, then reload the app. Install the extension **before** importing the layout.
+4. Choose **Layouts → Import from file…** and select `fusionx_foxglove_layout.json`.
+5. Choose **Open local file(s)** (or press **Ctrl+O**) and select a finished `recording_###.mcap`.
+6. Press play and scrub the timeline. Inspect the **FusionX Tactile** panel and the IMU plots. Use the image panel for
+   stereo-video playback when needed. The saved stereo image contains the left and right views side by side.
+
+Use Foxglove's [**Data Source Info** panel](https://docs.foxglove.dev/docs/visualization/panels/data-source-info) to check message counts and duration, and **Raw Messages** to inspect samples
+on these topics:
+
+| Topic | What to check |
+|---|---|
+| `/camera/head/stereo/h264` | Head stereo video with a nonzero message count. |
+| `/glove/lh/tactile`, `/glove/rh/tactile` | Both gloves' tactile and bend readings. |
+| `/glove/lh/imu`, `/glove/rh/imu` | Both gloves' orientation/motion readings. |
+| `/camera/head/imu` | Head-camera IMU readings. |
+| `/calibration/glove/user/json` | The user calibration stored in the recording. |
+
+---
+
 ## SDK Overview
 
 - SDK package version: **0.2.0**. The branch name `v2-conductive-fabric` identifies the glove configuration, not the
@@ -24,7 +186,7 @@ Python API, examples, and physical sensor diagrams for **V2 conductive-fabric gl
 - Older SDK/app instructions and camera tools remain on
   [`v1-conductive-fabric`](https://github.com/TouchTronix-Robotics/FusionX-DataCollection/tree/v1-conductive-fabric).
 
-## Quick start
+## SDK quick start
 
 Use the SDK wheel (`.whl` file) supplied by TouchTronix for your Python version, operating system, and CPU architecture.
 Contact TouchTronix if you need an SDK package or a different build. The current build targets are **Python 3.12,
