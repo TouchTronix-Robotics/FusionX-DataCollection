@@ -8,7 +8,9 @@ from collections.abc import Sequence
 from concurrent.futures import ThreadPoolExecutor, as_completed, wait
 from threading import Event, Lock
 
-from tactile_glove import DEFAULT_PIXEL_AREA_MM2, GloveFrame, GloveReader
+from tactile_glove import GloveFrame, GloveReader
+
+DEFAULT_PIXEL_AREA_MM2 = 22.5
 
 
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:

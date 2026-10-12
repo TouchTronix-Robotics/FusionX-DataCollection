@@ -4,7 +4,9 @@ import signal
 import time
 from concurrent.futures import Future
 
-from tactile_glove import ADC_MAX, FINGER_NAMES
+# Display conventions for the current five-patch V01.12 glove.
+FINGER_NAMES = ("thumb", "index", "middle", "ring", "little")
+ADC_MAX = 4096
 
 
 class GloveViewer:

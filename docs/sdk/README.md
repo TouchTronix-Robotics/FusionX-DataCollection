@@ -96,7 +96,7 @@ To use an existing resting measurement, pass `baseline_adc=resting_adc`. It must
 
 ### Per-pixel newtons
 
-The supplier calibration contains kPa lookup values. Both the GUI recorder and SDK output `finger_pressure_kPa_pixels` and `finger_pressure_N_pixels`. For these thin-film gloves, the confirmed active area is **22.5 mm² per pixel**. The exported `tactile_glove.DEFAULT_PIXEL_AREA_MM2` supplies that shared default. The SDK computes `N = kPa × 22.5 × 0.001 = kPa × 0.0225`. With `--force JSON` or `force=path` and a resting tare, all 80 per-pixel Newton values are available automatically.
+The supplier calibration contains kPa lookup values. Both the GUI recorder and SDK output `finger_pressure_kPa_pixels` and `finger_pressure_N_pixels`. For these thin-film gloves, the reader's default active area is **22.5 mm² per pixel**. The SDK computes `N = kPa × 22.5 × 0.001 = kPa × 0.0225`. With `--force JSON` or `force=path` and a resting tare, all 80 per-pixel Newton values are available automatically.
 
 The API accepts `pixel_area_mm2=measured_pixel_area_mm2` to override the uniform default, or a dictionary mapping each of the five fingers to 16 positive finite areas in decoded patch order. With calibration and a resting baseline, `frame.tactile.finger_pressure_N_pixels["index"]` contains **16 per-pixel forces in newtons**. The pressure and saturation fields remain available. Pass `pixel_area_mm2=None` for pressure-only calibrated output. Raw-only readers have all three calibrated fields set to `None`.
 

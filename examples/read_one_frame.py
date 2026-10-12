@@ -2,7 +2,9 @@ import argparse
 import math
 from collections.abc import Sequence
 
-from tactile_glove import DEFAULT_PIXEL_AREA_MM2, FINGER_NAMES, GloveFrame, GloveReader
+from tactile_glove import GloveFrame, GloveReader
+
+DEFAULT_PIXEL_AREA_MM2 = 22.5
 
 
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
@@ -46,8 +48,7 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
 def format_frame(frame: GloveFrame, hand: str | None = None) -> str:
     sensor_name = hand.upper() if hand is not None else frame.hand.upper()
     lines = [f"[{sensor_name}]", "finger:"]
-    for finger in FINGER_NAMES:
-        pressure = frame.tactile.finger_pressure[finger]
+    for finger, pressure in frame.tactile.finger_pressure.items():
         bend = frame.tactile.finger_bend[finger]
         lines.append(f"  {finger}: pressure={pressure} bend={bend}")
         calibrated = frame.tactile.finger_pressure_kPa_pixels
