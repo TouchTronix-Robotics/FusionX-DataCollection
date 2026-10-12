@@ -28,6 +28,11 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--baudrate", type=int, default=1_000_000)
     parser.add_argument("--seconds", type=float, help="Stop after this many seconds")
     parser.add_argument(
+        "--force",
+        metavar="JSON",
+        help="Polynomial force calibration; captures a contact-free startup tare",
+    )
+    parser.add_argument(
         "--viewer", action="store_true", help="Show live tactile heatmaps and bend bars"
     )
     args = parser.parse_args(argv)
@@ -62,11 +67,21 @@ class Capture:
     """One acquisition worker per port; rendering consumes only the latest frame."""
 
     def __init__(
-        self, ports: dict[str, str], baudrate: int, seconds: float | None
+        self,
+        ports: dict[str, str],
+        baudrate: int,
+        seconds: float | None,
+        force: str | None = None,
     ) -> None:
         self.ports = ports
         self.baudrate = baudrate
         self.seconds = seconds
+        self.force = force
+        # Validate every selected hand's calibration before opening any port.
+        self._readers = {
+            hand: GloveReader(port, hand=hand, baudrate=baudrate, force=force)
+            for hand, port in ports.items()
+        }
         self.stop = Event()
         self.lock = Lock()
         self.started: dict[str, float] = {}
@@ -76,7 +91,9 @@ class Capture:
     def _read_hand(self, hand: str, port: str) -> None:
         if self.stop.is_set():
             return
-        with GloveReader(port, hand=hand, baudrate=self.baudrate) as glove:
+        with self._readers[hand] as glove:
+            if self.force is not None:
+                glove.tare()
             started = time.monotonic()
             with self.lock:
                 self.started[hand] = started
@@ -126,18 +143,29 @@ class Capture:
                 parts.append(
                     f"{hand.upper()}: {counts[hand]} packets, mean {counts[hand] / elapsed:.1f} Hz, last frame {age:.2f}s ago"
                 )
+                forces = frame.tactile.finger_force_N_total
+                if forces is not None:
+                    parts[-1] += ", force N: " + ", ".join(
+                        f"{finger}={value:.3f}" for finger, value in forces.items()
+                    )
         return "; ".join(parts)
 
 
 def main(argv: Sequence[str] | None = None) -> None:
     args = parse_args(argv)
-    capture = Capture(args.ports, args.baudrate, args.seconds)
+    capture = Capture(args.ports, args.baudrate, args.seconds, force=args.force)
     viewer = None
     if args.viewer:
         from glove_viewer import GloveViewer
 
         viewer = GloveViewer(capture)
     print("Streaming glove data. Press Ctrl+C or close the viewer to stop.", flush=True)
+    if args.force is not None:
+        print(
+            "Force calibration: keep the worn gloves contact-free during the "
+            "initial one-second resting tare for each hand.",
+            flush=True,
+        )
     with ThreadPoolExecutor(
         max_workers=1, thread_name_prefix="glove-capture"
     ) as executor:

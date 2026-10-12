@@ -18,7 +18,7 @@ Request a validated SDK 0.5.0 wheel from TouchTronix for your Python interpreter
 
 Check `python --version` and your selected environment. Supplied filenames contain `cp313` and target **64-bit CPython 3.13**. Python 3.12/3.14 and another architecture require different builds. Ask TouchTronix for a matching wheel; do not install the V1/V2 `touchtronix_glove` package for these gloves.
 
-The wheel installs pyserial, PySide6, pyqtgraph, and their dependencies. The headless API does not import GUI libraries, but the optional viewer requires a desktop/GUI-capable environment. On Linux, Qt may additionally require the distribution's graphics runtime libraries, such as `libegl1`.
+The wheel installs pyserial, NumPy, PySide6, pyqtgraph, and their dependencies. The headless API does not import GUI libraries, but the optional viewer requires a desktop/GUI-capable environment. On Linux, Qt may additionally require the distribution's graphics runtime libraries, such as `libegl1`.
 
 ## Serial access, wrong hand, or no samples
 
@@ -52,7 +52,9 @@ Log out and back in before retrying. Other distributions may use `uucp`. Avoid `
 
 ## Force, pressure, or IMU physical units are missing
 
-The SDK returns raw tactile/bend ADC values and accepts no calibration file. Implement calibrated force/pressure or bend-angle conversion in your own processing layer using calibration appropriate to the physical gloves and session. Preserve raw readings for reproducibility.
+Use `force=FILE` or the examples’ `--force FILE` with a current polynomial calibration for the selected physical glove. The API requires `tare()` with the worn glove contact-free or explicit resting `baseline_adc`; the examples take a one-second tare automatically. Force appears as `finger_force_N_total`, one total in N per finger. Renew tare for each wearer/session.
+
+The supplied per-pixel pressure JSON contains kPa tables and is rejected as a polynomial force file. Per-pixel force requires measured pixel areas; none are assumed for V3. Pressure LUTs and bend-angle conversion remain processing tasks for your custom pipeline. Preserve raw readings for reproducibility. See [force calibration](README.md#optional-total-force-calibration).
 
 Euler angles are in degrees. Raw gyro/accelerometer values are signed integers with unverified physical scaling; inspected V01.12 samples were zero. The SDK does not transmit or produce a quaternion.
 

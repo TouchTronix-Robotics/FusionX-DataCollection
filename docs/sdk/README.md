@@ -2,7 +2,7 @@
 
 Use the `tactile_glove` Python package to acquire V01.12 glove samples and integrate them into your own collection, robotics, processing, or storage pipeline. Each port has an explicitly assigned hand, and each accepted frame contains tactile, bend, IMU, and host/device timing fields.
 
-The SDK handles serial commands, framing, CRC validation, and decoding. Your application controls acquisition workers, reconnection, processing, and output storage. Cameras and the FusionX GUI are optional components of your own system.
+The SDK handles serial commands, framing, CRC validation, decoding, and optional polynomial total-force calibration. Your application controls acquisition workers, reconnection, processing, and output storage. Cameras and the FusionX GUI are optional components of your own system.
 
 - [Full Python API](api.md)
 - [Sensor layout and indexing](sensors.md)
@@ -63,6 +63,34 @@ with GloveReader("/dev/ttyUSB1", hand="rh") as glove:
 
 Use one reader per port and one consumer per reader. The default connection is 1,000,000 baud, 8N1. `read_frame()` returns a complete frame or `None` while waiting for one; `stream()` yields accepted frames. See the [API reference](api.md) for fields, types, lifecycle, and exceptions.
 
+## Optional total-force calibration
+
+Supply a V01.12 **polynomial force** JSON for the selected physical glove:
+
+```bash
+python examples/stream_glove.py --left PORT_LEFT --right PORT_RIGHT --force pair.json --seconds 30
+python examples/read_one_frame.py PORT_RIGHT --hand rh --force pair.json
+```
+
+Both examples capture a one-second resting tare after connecting. Keep each glove worn and contact-free during that phase. The streaming duration begins after tare; the optional viewer continues to display raw ADC values. Terminal status includes total force per finger in newtons. The file must contain every selected hand, and all selected calibrations are validated before any port is opened.
+
+In the Python API, use `force=` and explicitly capture a resting baseline before requesting calibrated frames:
+
+```python
+from tactile_glove import GloveReader
+
+with GloveReader("/dev/ttyUSB1", hand="rh", force="pair.json") as glove:
+    resting_adc = glove.tare()  # Default: one second with no tactile contact.
+    frame = next(glove.stream())
+    print(frame.tactile.finger_force_N_total["index"])  # Total index force in N.
+```
+
+Alternatively, pass `baseline_adc=resting_adc` to the constructor to use an existing resting measurement immediately. It must map all five finger names to 16 finite ADC values each within 0–4096. Half-count medians are accepted. Tare clears older buffered input before measuring fresh samples and leaves the device counter running. The baseline persists across reconnects of the same reader; renew it after changing the wearer/session or putting the glove on again. Calling `read_frame()` or `stream()` with a force file but no prepared baseline raises `RuntimeError` until `tare()` succeeds or a baseline is supplied.
+
+The polynomial file requires `meta.layout` matching V01.12 and an `lh` and/or `rh` object containing all five fingers. Every finger has finite `c3`, `c2`, `c1`, and `c0` coefficients. The calibration operates on the **sum of that finger's 16 raw ADC values**. Let `F(s) = c3*s³ + c2*s² + c1*s + c0`; output is `max(max(F(live_sum), 0) - max(F(resting_sum), 0), 0)`. Lookups are prepared after tare and do not resample acquisition. Filenames can be arbitrary; `--force` selects the format.
+
+This produces **five total forces**, not 80 pixel forces. The supplier `calibrations/example_perpixel_pressure.json` contains kPa lookup tables and is rejected by `force=`. No pixel area is assumed for these thin-film gloves. Per-pixel force would require measured areas using `N = kPa × area_mm² × 0.001`; the old JQ pixel-area constants do not apply.
+
 ## Build your own data collection pipeline
 
 The example below writes every accepted sample from one right-hand glove to a JSON Lines file for 10 seconds. Use your actual port and a new output filename for each run. It includes all 80 pressure values, five bend values, decoded IMU readings, and both timestamps through the public dataclasses.
@@ -90,6 +118,6 @@ For a larger pipeline:
 - Acquire each glove in its own worker so one port does not stall the other. The [streaming example](../../examples/stream_glove.py) demonstrates this.
 - Preserve integer `host_timestamp_ns` and `device_timestamp_ms` alongside every sample. The host timestamp is Unix decode time; the glove counter is elapsed stream time. Independently read gloves and other sensors are not automatically synchronized.
 - Keep acquisition separate from slow storage, networking, or rendering. If you buffer data, define capacity and report any dropped samples. The viewer's latest-frame strategy is for display; recording pipelines should retain each accepted frame.
-- Apply any force/pressure calibration in your own processing layer while keeping the raw 0–4096 ADC values. SDK 0.5.0 accepts no calibration-file argument and produces no calibrated force or pressure.
+- Use `force=FILE` with a resting tare for optional polynomial total-force output. Keep the raw 0–4096 ADC values alongside it. Per-pixel kPa lookup conversion and any area-based force conversion require your own processing layer; no pixel areas are assumed.
 
 Healthy inspected glove output measured 125 Hz, with 8 ms between device counters. Measure the behavior of your complete pipeline under its actual load; this observation is not a guaranteed hardware sampling rate. Raw glove gyro/accelerometer units and usable output remain unverified. See [sensor values and timing](api.md) before converting units or aligning with other sensors.

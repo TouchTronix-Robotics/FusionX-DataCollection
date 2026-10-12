@@ -1,9 +1,7 @@
 import argparse
 from collections.abc import Sequence
 
-from tactile_glove import FINGER_NAMES
-from tactile_glove import GloveReader
-from tactile_glove import GloveFrame
+from tactile_glove import FINGER_NAMES, GloveFrame, GloveReader
 
 
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
@@ -26,6 +24,11 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
         default=1_000_000,
         help="Serial baud rate. Default: 1_000_000",
     )
+    parser.add_argument(
+        "--force",
+        metavar="JSON",
+        help="Polynomial force calibration; captures a contact-free startup tare",
+    )
     return parser.parse_args(argv)
 
 
@@ -36,6 +39,9 @@ def format_frame(frame: GloveFrame, hand: str | None = None) -> str:
         pressure = frame.tactile.finger_pressure[finger]
         bend = frame.tactile.finger_bend[finger]
         lines.append(f"  {finger}: pressure={pressure} bend={bend}")
+        forces = frame.tactile.finger_force_N_total
+        if forces is not None:
+            lines[-1] += f" force_N={forces[finger]:.6f}"
     lines.append(
         f"imu: euler_deg={frame.imu.euler_deg} gyro_raw={frame.imu.gyro_raw} accel_raw={frame.imu.accel_raw}"
     )
@@ -49,7 +55,14 @@ def main(argv: Sequence[str] | None = None) -> None:
         "waiting for glove frames...",
         flush=True,
     )
-    with GloveReader(args.port, hand=args.hand, baudrate=args.baudrate) as glove:
+    with GloveReader(
+        args.port, hand=args.hand, baudrate=args.baudrate, force=args.force
+    ) as glove:
+        if args.force is not None:
+            print(
+                "Keep the worn glove contact-free for the one-second tare.", flush=True
+            )
+            glove.tare()
         while True:
             frame = glove.read_frame()
             if frame is not None:
