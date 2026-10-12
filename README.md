@@ -7,7 +7,7 @@ Documentation for **V3 thin-film gloves**, firmware **V01.12**, on branch **`v3-
 | Guide | For | What you collect / control |
 |---|---|---|
 | **[FusionX GUI data collection](docs/gui/README.md)** | Operators using the full FusionX desktop application | Glove data, required head stereo video/head IMU, and optional wrist video recorded to MCAP. The GUI handles calibration, sensor startup, recording, and recovery. |
-| **[Glove SDK for custom pipelines](docs/sdk/README.md)** | Developers building their own acquisition, processing, or storage pipeline | Raw glove tactile/bend/IMU samples, timestamps, and optional calibrated total force per finger through Python. Your code controls workers, processing, reconnection, and storage. |
+| **[Glove SDK for custom pipelines](docs/sdk/README.md)** | Developers building their own acquisition, processing, or storage pipeline | Raw glove tactile/bend/IMU samples, timestamps, and optional calibrated per-pixel pressure/force through Python. Your code controls workers, processing, reconnection, and storage. |
 
 ### Full FusionX GUI
 

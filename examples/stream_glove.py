@@ -30,7 +30,14 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser.add_argument(
         "--force",
         metavar="JSON",
-        help="Polynomial force calibration; captures a contact-free startup tare",
+        help="Per-pixel pressure calibration; captures a contact-free startup tare",
+    )
+    parser.add_argument(
+        "--pixel-area-mm2",
+        type=float,
+        default=22.5,
+        metavar="AREA",
+        help="Active area of each pixel in mm² for --force (default: 22.5)",
     )
     parser.add_argument(
         "--viewer", action="store_true", help="Show live tactile heatmaps and bend bars"
@@ -60,6 +67,8 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
         not math.isfinite(args.seconds) or args.seconds <= 0
     ):
         parser.error("--seconds must be a finite positive duration")
+    if not math.isfinite(args.pixel_area_mm2) or args.pixel_area_mm2 <= 0:
+        parser.error("--pixel-area-mm2 must be finite and positive")
     return args
 
 
@@ -72,6 +81,7 @@ class Capture:
         baudrate: int,
         seconds: float | None,
         force: str | None = None,
+        pixel_area_mm2: float = 22.5,
     ) -> None:
         self.ports = ports
         self.baudrate = baudrate
@@ -79,7 +89,13 @@ class Capture:
         self.force = force
         # Validate every selected hand's calibration before opening any port.
         self._readers = {
-            hand: GloveReader(port, hand=hand, baudrate=baudrate, force=force)
+            hand: GloveReader(
+                port,
+                hand=hand,
+                baudrate=baudrate,
+                force=force,
+                pixel_area_mm2=pixel_area_mm2,
+            )
             for hand, port in ports.items()
         }
         self.stop = Event()
@@ -143,17 +159,30 @@ class Capture:
                 parts.append(
                     f"{hand.upper()}: {counts[hand]} packets, mean {counts[hand] / elapsed:.1f} Hz, last frame {age:.2f}s ago"
                 )
-                forces = frame.tactile.finger_force_N_total
+                pressure = frame.tactile.finger_pressure_kPa_pixels
+                if pressure is not None:
+                    parts[-1] += ", peak pixel kPa: " + ", ".join(
+                        f"{finger}={max(values):.3f}"
+                        for finger, values in pressure.items()
+                    )
+                forces = frame.tactile.finger_pressure_N
                 if forces is not None:
-                    parts[-1] += ", force N: " + ", ".join(
-                        f"{finger}={value:.3f}" for finger, value in forces.items()
+                    parts[-1] += ", peak pixel N: " + ", ".join(
+                        f"{finger}={max(values):.3f}"
+                        for finger, values in forces.items()
                     )
         return "; ".join(parts)
 
 
 def main(argv: Sequence[str] | None = None) -> None:
     args = parse_args(argv)
-    capture = Capture(args.ports, args.baudrate, args.seconds, force=args.force)
+    capture = Capture(
+        args.ports,
+        args.baudrate,
+        args.seconds,
+        force=args.force,
+        pixel_area_mm2=args.pixel_area_mm2,
+    )
     viewer = None
     if args.viewer:
         from glove_viewer import GloveViewer
@@ -162,7 +191,7 @@ def main(argv: Sequence[str] | None = None) -> None:
     print("Streaming glove data. Press Ctrl+C or close the viewer to stop.", flush=True)
     if args.force is not None:
         print(
-            "Force calibration: keep the worn gloves contact-free during the "
+            "Per-pixel calibration: keep the worn gloves contact-free during the "
             "initial one-second resting tare for each hand.",
             flush=True,
         )

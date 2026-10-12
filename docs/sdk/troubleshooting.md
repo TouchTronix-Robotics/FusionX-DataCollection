@@ -52,9 +52,9 @@ Log out and back in before retrying. Other distributions may use `uucp`. Avoid `
 
 ## Force, pressure, or IMU physical units are missing
 
-Use `force=FILE` or the examples’ `--force FILE` with a current polynomial calibration for the selected physical glove. The API requires `tare()` with the worn glove contact-free or explicit resting `baseline_adc`; the examples take a one-second tare automatically. Force appears as `finger_force_N_total`, one total in N per finger. Renew tare for each wearer/session.
+Use `force=FILE` or the examples’ `--force FILE` with `calibrations/example_perpixel_pressure.json` and its companion guide for the correct physical glove pair. The API requires a contact-free `tare()` or explicit resting `baseline_adc`; the examples take a one-second tare automatically. Calibrated `finger_pressure_kPa_pixels` and `finger_pressure_saturated` each contain 16 entries per finger. Renew tare for each wearer/session.
 
-The supplied per-pixel pressure JSON contains kPa tables and is rejected as a polynomial force file. Per-pixel force requires measured pixel areas; none are assumed for V3. Pressure LUTs and bend-angle conversion remain processing tasks for your custom pipeline. Preserve raw readings for reproducibility. See [force calibration](README.md#optional-total-force-calibration).
+This supplied file and the current GUI pressure output are in kPa. The SDK uses the confirmed **22.5 mm² active area per pixel** to additionally output `finger_pressure_N` by default. Override the area through `pixel_area_mm2` (API) or uniform `--pixel-area-mm2 AREA_MM2` (examples). The API can select pressure-only output with `pixel_area_mm2=None`. Preserve raw readings for reproducibility. See [per-pixel calibration](README.md#optional-per-pixel-calibration).
 
 Euler angles are in degrees. Raw gyro/accelerometer values are signed integers with unverified physical scaling; inspected V01.12 samples were zero. The SDK does not transmit or produce a quaternion.
 
