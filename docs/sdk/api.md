@@ -2,123 +2,179 @@
 
 [SDK guide](README.md) · [Sensor indexing](sensors.md) · [Troubleshooting](troubleshooting.md)
 
-The `tactile-glove-sdk` **0.5.0** API exports the `tactile_glove` package. Runtime reader/parser modules are compiled. The examples in this repository use that installed wheel.
+SDK **0.5.0** exports four classes:
 
 ```python
-from tactile_glove import (
-    GloveReader, GloveFrame, TactileData, IMUData,
-)
+from tactile_glove import GloveReader, GloveFrame, TactileData, IMUData
 ```
 
 ## GloveReader
 
+Replace the port and hand with your physical assignment. Use one reader per port and one consumer per reader.
+
 ```python
-reader = GloveReader("COM3", hand="lh", baudrate=1_000_000)
+PORT = "COM3"  # Linux example: "/dev/ttyUSB0"
+# force, baseline_adc, and pixel_area_mm2 are keyword-only arguments.
+
+with GloveReader(PORT, hand="lh") as glove:
+    frame = next(glove.stream())  # Wait for a complete valid sample.
+# The context manager stops streaming and closes the port, including on errors.
+# Field examples below use this frame; every frame contains tactile and IMU data.
 ```
 
 | Argument | Default | Meaning |
 |---|---|---|
-| `port` | Required string | One explicit serial port. Create separate readers for two gloves. |
-| `hand` | `"lh"` | Caller-supplied `"lh"` or `"rh"`; device packets have no hand identifier. |
-| `baudrate` | `1_000_000` | Wired V01.12 speed; 8 data bits, no parity, one stop bit. |
-| `force` | `None`, keyword-only | Optional path to supplier per-pixel pressure LUT JSON for this physical glove pair, such as `calibrations/example_perpixel_pressure.json`. |
-| `baseline_adc` | `None`, keyword-only | Optional mapping of five finger names to 16 finite resting ADC values each in 0–4096, in top-left row-major order. Requires `force`; otherwise call `tare()` before reading. |
-| `pixel_area_mm2` | `22.5`, keyword-only | Active area in mm²: one positive finite uniform area or five finger names mapped to 16 areas in decoded patch order. The confirmed default enables per-pixel Newton output with calibration; `None` selects pressure-only output. |
+| `port` | Required | Serial port. Packets do not identify the hand. |
+| `hand` | `"lh"` | `"lh"` or `"rh"`. |
+| `baudrate` | `1_000_000` | Wired V01.12, 8N1. |
+| `force` | `None` | Supplier per-pixel pressure JSON for this glove pair. |
+| `baseline_adc` | `None` | Five finger names → 16 resting ADC values each, within 0–4096; requires `force`. Otherwise call `tare()`. |
+| `pixel_area_mm2` | `22.5` | Positive uniform area or five named 16-area lists; `None` disables newtons. |
 
-| Operation | Behavior |
-|---|---|
-| `connect()` | Opens the port, stops a stale stream, queries firmware/battery, and starts combined samples. Connecting again restarts the connection and glove counter. |
-| `disconnect()` | Stops streaming, closes the port, and clears pending input. Repeated calls are safe. |
-| `read_frame()` | Returns `GloveFrame` or `None` while waiting for a complete valid packet; it can block briefly on a serial read. Two seconds without a valid sample raises `TimeoutError`. |
-| `stream()` | Yields accepted complete frames, skipping temporary `None` results without resampling. |
-| `tare(duration_s=1.0)` | With per-pixel calibration enabled and the reader connected, clears buffered input and measures fresh accepted samples for the interval after the first fresh sample, then prepares pressure-domain lookup tables from per-pixel resting ADC medians. Returns `dict[str, list[float]]`. Keep the worn glove contact-free. |
-| `with GloveReader(...) as reader:` | Connects on entry and disconnects on exit, including when the body raises. |
+For polling instead of an iterator:
 
-Use one consumer per reader; do not read the same instance from multiple threads. The example's acquisition workers belong to the example, not to the synchronous `GloveReader` API. The SDK propagates serial errors and does not reconnect automatically. Reading before connecting raises `RuntimeError`; an unsupported hand raises `ValueError`. The valid-sample timeout starts at the stream-start command and resets only for accepted samples, not metadata or malformed packets. Recover by disconnecting/reconnecting and creating a new `stream()` iterator if the previous one raised. A prepared resting baseline survives reconnects of the same reader; renew it for a new wearer/session or after putting the glove on again. Invalid per-pixel calibration, areas, or resting ADC values raise `ValueError`. Reading with a force file but no resting baseline raises `RuntimeError` until `tare()` succeeds or `baseline_adc` is supplied.
+```python
+with GloveReader(PORT, hand="lh") as glove:
+    while True:
+        frame = glove.read_frame()
+        if frame is not None:  # None means no complete sample yet.
+            print(frame.device_timestamp_ms)
+            break
+```
 
 ## GloveFrame
 
-Each accepted V01.12 frame contains both tactile/bend data and IMU fields. There are no pressure-only or IMU-only frame variants.
-
 | Field | Type | Meaning |
 |---|---|---|
-| `hand` | `str` | Your explicit `lh`/`rh` assignment. |
-| `tactile` | `TactileData` | All five finger patches and bend channels. |
-| `imu` | `IMUData` | Euler angles and raw motion fields. |
-| `host_timestamp_ns` | `int` | Unix host time in nanoseconds when a valid packet is decoded; serial buffering and processing can delay it. |
-| `device_timestamp_ms` | `int` | Glove elapsed stream counter, separate from Unix time. |
+| `hand` | `str` | Your LH/RH assignment. |
+| `tactile` | `TactileData` | Pressure and bend readings. |
+| `imu` | `IMUData` | Euler angles and raw motion readings. |
+| `host_timestamp_ns` | `int` | Unix host decode time; includes buffering/processing delays. |
+| `device_timestamp_ms` | `int` | Glove elapsed stream time; restarts at zero on stream start/reconnect. |
 
-Timing belongs to `GloveFrame`; sensor objects have no separate timestamps. There is no SDK `frame.timestamp` property. Convert host time to seconds with `frame.host_timestamp_ns / 1_000_000_000` if needed.
-
-Sending the start command restarts the unsigned 32-bit millisecond counter at zero, including when already streaming. Its range is 0–4,294,967,295 ms (about 49.71 days); firmware overflow behavior has not been measured. Do not substitute this counter for the host timestamp. Healthy inspected output advanced by 8 ms per sample (125 Hz); the SDK returns accepted samples without resampling.
+```python
+sample: GloveFrame = frame
+print(sample.hand)
+print(sample.host_timestamp_ns / 1_000_000_000)  # Unix seconds.
+print(sample.device_timestamp_ms)              # Elapsed milliseconds, not Unix time.
+# Counter: uint32, 0–4,294,967,295 ms (~49.71 days); overflow behavior unverified.
+# Observed healthy output: 8 ms spacing (~125 Hz). The SDK does not resample.
+```
 
 ## TactileData
 
 | Field | Shape | Values / order |
 |---|---|---|
-| `finger_pressure` | `dict[str, list[int]]` | Five named 4×4 patches, flattened row-major to 16 entries with `(0, 0)` at the top left. |
-| `finger_bend` | `dict[str, int]` | One raw ADC value per named finger. |
-| `finger_pressure_kPa_pixels` | `dict[str, list[float]]` or `None` | Five named lists of 16 calibrated contact pressures in kPa; `None` without calibration. |
-| `finger_pressure_N_pixels` | `dict[str, list[float]]` or `None` | Matching 16 per-pixel forces in newtons per finger with calibration, using 22.5 mm² by default; `None` without calibration or with `pixel_area_mm2=None`. |
-| `finger_pressure_saturated` | `dict[str, list[bool]]` or `None` | Matching saturation flags from original raw ADC `>=4000`; `None` without calibration. |
-
-Finger dictionaries use `"thumb"`, `"index"`, `"middle"`, `"ring"`, and `"little"` in that order. ADC values remain **0–4096**, and the reader's default pixel area is **22.5 mm²**. All 80 pressure and five bend channels are present in the named finger dictionaries. Optional calibrated pixel arrays align with these unchanged raw ADC fields. Bend-angle calibration is not applied. The examples define their display conventions directly; the SDK exports the four classes shown above.
-
-For named patch `[row, column]`:
+| `finger_pressure` | `dict[str, list[int]]` | Five 4×4 patches, 16 row-major ADC values each; `(0, 0)` is top-left. |
+| `finger_bend` | `dict[str, int]` | One raw ADC value per finger. |
+| `finger_pressure_kPa_pixels` | `dict[str, list[float]]` or `None` | 16 contact pressures per finger; requires calibration and tare/baseline. |
+| `finger_pressure_N_pixels` | `dict[str, list[float]]` or `None` | Matching pixel forces; `None` without calibration or with `pixel_area_mm2=None`. |
+| `finger_pressure_saturated` | `dict[str, list[bool]]` or `None` | Raw ADC `>=4000`; requires calibration. |
 
 ```python
-value = frame.tactile.finger_pressure["index"][4 * row + column]
-# Corresponding pressure wire-channel index for the index finger:
-wire_index = 16 + 4 * column + row
+tactile: TactileData = frame.tactile
+print(list(tactile.finger_pressure))  # thumb, index, middle, ring, little
+pixels = tactile.finger_pressure["index"]  # 16 integers, 0–4096.
+patch = [pixels[i:i + 4] for i in range(0, 16, 4)]
+print(patch[0][0])                         # Top-left; no flip needed.
+print(tactile.finger_pressure["index"][9]) # Row 2, column 1: 4 * row + column.
+print(tactile.finger_bend["index"])        # Raw ADC, not a bend angle.
 ```
 
-See the [left](../glove-map-lh.svg) and [right](../glove-map-rh.svg) diagrams. The parser returns decoded row zero at the top, so the viewer consumes each patch directly without flipping its data. Each pressure patch is a Python list; reshape its 16 row-major entries to 4×4 when needed. This glove has no palm channels or separate two-value bend/dorsal structure.
+[Physical pixel maps](sensors.md) show all 80 pressure and five bend channels.
 
 ## IMUData
 
-| Field | Tuple order | Meaning |
+| Field | Tuple | Units |
 |---|---|---|
-| `euler_deg` | `(pitch, roll, yaw)` | Raw device Euler angles in degrees; no hand-dependent sign changes. |
-| `gyro_raw` | `(x, y, z)` | Signed 16-bit device values; physical scaling is unverified. |
-| `accel_raw` | `(x, y, z)` | Signed 16-bit device values; physical scaling is unverified. |
+| `euler_deg` | `(pitch, roll, yaw)` | Device degrees; no hand-dependent sign changes. |
+| `gyro_raw` | `(x, y, z)` | Signed int16; physical scaling unverified. |
+| `accel_raw` | `(x, y, z)` | Signed int16; physical scaling unverified. |
 
-Inspected V01.12 samples had populated Euler angles but zero raw gyro/accelerometer values. Preserve those fields without claiming verified rad/s or m/s² for the glove. The firmware does not transmit a quaternion or magnetometer reading.
+```python
+imu: IMUData = frame.imu
+pitch, roll, yaw = imu.euler_deg
+print(pitch, roll, yaw, imu.gyro_raw, imu.accel_raw)
+# Inspected gyro/accel values were zero. No quaternion or magnetometer is transmitted.
+```
 
 ## Per-pixel calibration
 
-```python
-from tactile_glove import GloveReader
+Use the matching glove-pair file. `calibrations/example_perpixel_pressure.json` belongs to **LH_1/RH_1**.
 
-with GloveReader("COM3", hand="lh", force="calibrations/example_perpixel_pressure.json") as glove:
-    resting_adc = glove.tare()  # One second, worn glove touching nothing.
+```python
+CALIBRATION = "calibrations/example_perpixel_pressure.json"
+
+with GloveReader(PORT, hand="lh", force=CALIBRATION) as glove:
+    resting_adc = glove.tare(duration_s=1.0)  # Worn glove, no tactile contact.
     frame = next(glove.stream())
-    print(frame.tactile.finger_pressure_kPa_pixels["thumb"])  # 16 values.
-    print(frame.tactile.finger_pressure_saturated["thumb"])
-    print(frame.tactile.finger_pressure_N_pixels["thumb"])  # 16 Newton values.
+    print(frame.tactile.finger_pressure_kPa_pixels["thumb"])  # 16 kPa values.
+    print(frame.tactile.finger_pressure_N_pixels["thumb"])    # 16 newton values.
+    print(frame.tactile.finger_pressure_saturated["thumb"])   # 16 flags.
+# N = kPa * area_mm2 * 0.001; default area is 22.5 mm².
+# Saturated/table-top values are lower bounds, even when tared pressure is zero.
 ```
 
-With a recent resting measurement, pass `baseline_adc=resting_adc` to enable calibrated output on the first accepted sample. Resting measurements use top-left row-major order. Tare discards buffered input, consumes fresh samples, and leaves the glove counter running. A failed tare invalidates the previous baseline.
+Reuse a recent resting measurement for the same glove and wearing session:
 
-`force` accepts the supplier JSON with exactly `lh` and `rh`, all five fingers in each hand, and exactly 16 raw pixel keys `r0c0`–`r3c3` per finger. Each table contains 4096 finite nonnegative kPa values, starts at zero, and never decreases. No metadata is required. This file belongs to physical gloves LH_1/RH_1; supply their matching hand assignments. Malformed tables and polynomial calibration files are rejected before a port opens.
+```python
+reader = GloveReader(
+    PORT, hand="lh", force=CALIBRATION, baseline_adc=resting_adc,
+    pixel_area_mm2=22.5,  # Override with measured areas; None gives pressure only.
+)
+with reader as glove:
+    frame = next(glove.stream())  # Baseline is already prepared.
+# Retare after changing wearer/session or putting the glove on again.
+# Tare clears buffered input without restarting the device counter.
+# The same reader retains its prepared baseline across reconnects.
+```
 
-The SDK reuses the GUI recorder's lookup preparation and conversion. Decoded patch `[row, col]` uses table `r{col}c{row}`. Contact pressure is `max(LUT[live_adc] - LUT[resting_adc], 0)`. Live and resting indices are clamped integers in 0–4095; raw ADC 4096 is preserved in `finger_pressure`. Saturation is based on raw ADC `>=4000`, even when tared pressure is zero. Output retains all 80 pixels without resampling. The guide defines 0–207 kPa calibrated and 207–345 kPa extended; saturated/table-top readings are lower bounds.
+See [calibration format and conversion](../gui/calibration.md#supplier-per-pixel-pressure) for LUT validation, mapping, and pressure-domain tare.
 
-The supplied file contains kPa lookup values. Both the GUI recorder and SDK output per-pixel kPa and newtons. For these thin-film gloves the confirmed active area is **22.5 mm² per pixel**. The SDK therefore provides `finger_pressure_N_pixels` by default with `force` and a resting baseline: `N = kPa × 22.5 × 0.001 = kPa × 0.0225`. All five fingers retain their 16 individual pixel forces.
+## Reconnect after errors
 
-Override `pixel_area_mm2` with another measured uniform area or a five-finger dictionary of 16 areas per finger in decoded patch order. Pass `None` for pressure-only output. Raw ADC values, pressure, saturation flags, and both timestamps remain available.
+```python
+import time
+from serial import SerialException
+
+reader = GloveReader(PORT, hand="lh")
+try:
+    while True:
+        try:
+            reader.connect()
+            for frame in reader.stream():  # New iterator after each reconnect.
+                print(frame.device_timestamp_ms)
+        except (TimeoutError, SerialException) as error:
+            print(error)
+        finally:
+            reader.disconnect()
+        time.sleep(1)  # Retry the same physical port.
+except KeyboardInterrupt:
+    pass  # The finally block has closed the port.
+```
+
+| Error | Check |
+|---|---|
+| `TimeoutError` | No valid sample for two seconds. Metadata/malformed packets do not reset the timeout. |
+| `SerialException` | Connection, permissions, or another reader using the port. |
+| `RuntimeError` | Connect before reading; with calibration, provide a baseline or call `tare()`. `tare()` requires `force`. |
+| `ValueError` | Hand, calibration, baseline, area, or tare duration. |
 
 ## Example behavior
 
-Run these commands from the cloned repository root.
-
 ```bash
+# Run from the repository root; replace COM3/COM4 with your ports.
 python examples/stream_glove.py --left COM3 --right COM4 --viewer --seconds 30
-python examples/stream_glove.py COM3 --hand lh --seconds 10
-python examples/stream_glove.py --left COM3 --right COM4 --force calibrations/example_perpixel_pressure.json --seconds 30
+python examples/read_one_frame.py COM3 --hand lh --force calibrations/example_perpixel_pressure.json
+python examples/test_glove.py COM3 --hand lh --raw-output glove_raw_bytes.txt
 ```
 
-The stream reports counts, mean received rate, and frame age once per second. With `--force`, it validates all selected hands before opening ports, takes a one-second contact-free tare per hand, and includes peak pixel pressures in kPa in terminal status. It also reports peak pixel forces in N using 22.5 mm² by default; `--pixel-area-mm2 AREA_MM2` overrides the area. Timed streaming begins after tare. Each selected port has its own worker. The optional viewer shows raw tactile/bend readings only and refreshes from the newest frame at 25 FPS. Unselected hands are labelled; stale readings dim.
+| Example | Behavior |
+|---|---|
+| `stream_glove.py` | One worker per port; prints counts/rate/frame age. `--force FILE` adds startup tare and peak kPa/N; timed streaming begins after tare. |
+| `--viewer` | Raw ADC display at 25 FPS; latest frame only, stale data dims. Keep `glove_viewer.py` beside the script. |
+| `--seconds` / Ctrl+C / window close | Stops workers and closes ports; reader/render errors propagate after cleanup. |
+| `read_one_frame.py` | Prints one frame, including calibrated arrays with `--force FILE`. |
+| `test_glove.py` | Counts bytes/frames and saves a hex dump; close other readers first. |
 
-Closing the viewer is checked before rendering another frame, so queued refreshes cannot access its closed graphics scene. Duration expiry, Ctrl+C, window close, and reader/rendering errors all stop and join acquisition and close ports. The script does not save recordings or reconnect automatically.
-
-`examples/read_one_frame.py` reads one frame. `examples/test_glove.py` reports serial bytes/frame counts and writes a hex dump (default `glove_raw_bytes.txt`; `--raw-output` selects a different path). Run diagnostics only when the GUI and other readers have released that port.
+[Save frames in your pipeline](README.md#build-your-own-data-collection-pipeline).

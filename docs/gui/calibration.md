@@ -2,18 +2,21 @@
 
 [GUI guide](README.md) · [Recording format](recording-format.md) · [Troubleshooting](troubleshooting.md)
 
-Two different files are selected in the GUI: **User Calibration** describes the current wearer/session, and **Glove Calibration** describes the physical glove pair's pressure or force response.
+| Selector | Purpose |
+|---|---|
+| **User Calibration** | Current wearer's resting ADC and bend endpoints. |
+| **Glove Calibration** | Physical glove pair's pressure/force response. |
 
 ## Wearer calibration: exactly two poses
 
-1. **Open palm / open hand:** wear the gloves, straighten every finger, and keep the tactile pads free of contact. Follow the collection cue. The app records resting tactile values and open-hand bend readings.
-2. **Closed fist:** close every finger, including the thumb, and hold through the collection cue. The app records the other bend endpoint only.
+| Pose | Measurement |
+|---|---|
+| Open hand, pads contact-free | Per-pixel median over the final second; average open bend readings. |
+| Closed fist, including thumb | Average closed bend readings; no tactile maximum. |
 
-No extra thumb/pinch/finger poses are required. The fist does not calibrate a tactile maximum. Saved open-pose samples contain tactile and bend readings; fist samples contain bend readings only. Neither pose stores glove IMU readings in its pose samples. Host/device timing and raw bend channels are retained.
+Renew after re-wearing gloves or changing wearer/session. A reused username replaces its file.
 
-Bend endpoints are pose averages, not observed sample extrema. The resting tactile baseline is the per-pixel median of approximately the final second of the open pose. Renew it after putting the gloves on again or changing wearer/session.
-
-Generated files have the `gloves` wrapper, five named fingers, 16 resting ADC values per finger, and this exact layout contract:
+The app generates the complete JSON with a `gloves` wrapper and this required `layout`:
 
 ```json
 {
@@ -27,36 +30,37 @@ Generated files have the `gloves` wrapper, five named fingers, 16 resting ADC va
 }
 ```
 
-Use the app to generate the complete file. Wearer files must use this exact layout; the supplier pressure LUT uses its own schema. Selecting an existing username/file for recalibration replaces that file deliberately; choose a new name to preserve it.
-
 ## Supplier per-pixel pressure
 
-The current reference pair uses `calibrations/example_perpixel_pressure.json` with `README_PerPixel_JSON.md`. Keep the pair's original file and guide intact. They apply only to physical gloves **LH_1/RH_1**; neither USB numbering nor packet contents can identify that pair or its hand assignment.
+`calibrations/example_perpixel_pressure.json` and its supplier guide apply only to **LH_1/RH_1**. Keep them intact; use the matching hand assignments.
 
-The pressure JSON contains exactly two top-level hand keys (`lh`, `rh`), five wire finger groups, and 16 pixel keys per finger (`r0c0` through `r3c3`). Each pixel has 4,096 finite, nonnegative, nondecreasing **kPa** values, starting at zero. There is no required metadata/pixel-area block. The calibration filename must contain `pressure` for the GUI's selection filter.
+| File requirement | Value |
+|---|---|
+| GUI filename | Contains `pressure`. |
+| Hands / fingers | Exactly `lh`, `rh`; thumb, index, middle, ring, little per hand. |
+| Pixels | `r0c0`–`r3c3`, each with 4,096 finite nonnegative kPa values; starts at zero and never decreases. |
+| Layout mapping | Decoded `[row,col]` uses raw LUT key `r{col}c{row}`. |
+| Supplier range | 0–207 kPa calibrated; 207–345 kPa extended. Saturated/table-top values are lower bounds. |
 
-For each physical pixel:
+Conversion for one pixel, shared by GUI and SDK:
 
-```text
-contact_kPa = max(LUT[raw_adc] - LUT[resting_adc], 0)
+```python
+def calibrated_pixel(raw_adc, resting_adc, lut_kpa):
+    live = min(4095, max(0, int(raw_adc)))
+    rest = min(4095, max(0, int(resting_adc)))
+    pressure_kpa = max(lut_kpa[live] - lut_kpa[rest], 0)
+    force_n = pressure_kpa * 22.5 * 0.001
+    saturated = raw_adc >= 4000
+    return pressure_kpa, force_n, saturated
+# Raw ADC 4096 stays intact; only LUT indices are clamped.
 ```
 
-Raw ADC values remain in 0–4096; only pressure lookup indices are clamped to 0–4095 because each supplied LUT has 4,096 entries. Subtraction happens after both pressure lookups, not by looking up an ADC difference. The supplied raw LUT key `[r,c]` corresponds to wire index `16*finger + 4*r + c`; decoded patch `[row,col]` therefore uses key `r{col}c{row}`.
-
-Recorded optional fields are:
-
-- `finger_pressure_kPa_pixels`: five arrays of 16 contact-pressure values in kPa.
-- `finger_pressure_N_pixels`: matching per-pixel forces in newtons, using the confirmed 22.5 mm² active area: `N = kPa × 0.0225`.
-- `finger_pressure_saturated`: matching booleans, true when the **original raw ADC is at least 4,000**, even if pressure tare gives zero.
-
-The supplier guide describes 0–207 kPa as calibrated and 207–345 kPa as extended with reduced resolution. Saturated or table-top values represent lower bounds. The JSON supplies kPa lookup values. The GUI and SDK both retain these pressures and additionally convert each pixel to newtons using 22.5 mm². Both arrays follow decoded patch order, with identical tare and saturation flags.
+The recorder outputs matching five-by-16 `finger_pressure_kPa_pixels`, `finger_pressure_N_pixels`, and `finger_pressure_saturated` arrays. Saturation uses raw ADC even when tared pressure is zero.
 
 ## Polynomial force
 
-A matching polynomial calibration is a separate format, selected with a filename containing `force`. It must include `meta.layout` matching the current glove. The recorder can emit five baseline-zeroed `finger_force_N_total` values. A pressure file does not produce these force values.
+Separate format: filename contains `force`, with the current `meta.layout`. Produces five baseline-zeroed `finger_force_N_total` values. Pressure LUT files do not produce total-force values.
 
 ## What the recording preserves
 
-The recording retains raw pressure/bend values without display normalization or resampling, plus the original wearer calibration under `/calibration/glove/user/json`. The selected pressure/force calibration JSON itself is not embedded in MCAP; retain it with the session's provenance when you need to reproduce conversion.
-
-The GUI's familiar palm area is blank display space, not a missing sensor reading or calibration slot. All five current finger pads are 4×4 and their displayed pixel correction does not change which physical LUT is used.
+MCAP retains raw ADC/timing and the selected wearer JSON at `/calibration/glove/user/json`. The glove-pair pressure/force JSON is **not embedded**; keep it with your session files.

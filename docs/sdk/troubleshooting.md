@@ -1,69 +1,56 @@
 # Glove SDK troubleshooting
 
-[SDK guide](README.md) · [Python API](api.md) · [Sensor indexing](sensors.md) · [Documentation home](../../README.md)
+[SDK guide](README.md) · [Python API](api.md) · [Sensor maps](sensors.md) · [Home](../../README.md)
 
-## Supported configuration and distribution
+## Setup
 
-| Component | Required configuration |
+| Requirement | Value |
 |---|---|
-| Glove | Wired thin-film V01.12, five 4×4 tactile patches and five bend channels |
-| Documented package / import | `tactile-glove-sdk` 0.5.0 / `tactile_glove` |
-| Supplied wheel target | CPython 3.13, Windows x86_64 or Linux x86_64 |
-| Serial connection | 1,000,000 baud, 8N1 |
-| Hand assignment | One caller-assigned `lh` or `rh` per selected port |
+| SDK / Python | [SDK 0.5.0](https://github.com/TouchTronix-Robotics/FusionX-DataCollection/releases/tag/v3.0.0), 64-bit CPython 3.13. |
+| Glove / serial | Wired V01.12; 1,000,000 baud, 8N1. |
+| Hand | Assign `lh`/`rh` yourself; ports and packets do not identify it. |
+| Viewer | Desktop, PySide6/pyqtgraph; Linux may also need `libegl1`. |
 
-Download SDK 0.5.0 from the [v3.0.0 release](https://github.com/TouchTronix-Robotics/FusionX-DataCollection/releases/tag/v3.0.0), selecting the Windows or Linux wheel for 64-bit CPython 3.13. These wheels are built and tested on GitHub-hosted runners. Package installation and the examples do not require a compiler or the private application source repository.
+## Quick fixes
 
-## SDK wheel will not install
+| Symptom | Action |
+|---|---|
+| Wheel will not install | Match CPython 3.13, OS, and x86_64. |
+| Earlier 0.5.0 stays installed | `python -m pip install --force-reinstall PATH_TO_WHEEL` |
+| Port unavailable | Close the GUI/other readers; check Device Manager or Linux permissions. |
+| Wrong hand | Touch one glove; correct `--left`/`--right` or API `hand`. |
+| `TimeoutError` | No valid sample for two seconds; inspect cable/power and reconnect. Examples do not retry automatically. |
+| Calibrated fields are `None` | Supply the matching `--force FILE`; API callers also need `tare()` or `baseline_adc`. |
+| Newton field is `None` | With calibration, use a positive `pixel_area_mm2`; `None` selects pressure only. |
+| Saturation stays true after tare | Flag uses original raw ADC `>=4000`; treat it as a lower bound. |
+| Raw gyro/accel are zero | Observed V01.12 behavior; physical scaling/output remain unverified. Euler angles are degrees. |
+| Viewer fails | Keep `glove_viewer.py` beside `stream_glove.py`; try without `--viewer`. |
 
-Check `python --version` and your selected environment. Supplied filenames contain `cp313` and target **64-bit CPython 3.13**. Python 3.12/3.14 and another architecture require different builds. Ask TouchTronix for a matching wheel; do not install the V1/V2 `touchtronix_glove` package for these gloves.
-
-If pip reports SDK 0.5.0 is already installed, use `python -m pip install --force-reinstall PATH_TO_DOWNLOADED_WHEEL`. This replaces an earlier 0.5.0 build with the v3.0.0 release wheel.
-
-The wheel installs pyserial, NumPy, PySide6, pyqtgraph, and their dependencies. The headless API does not import GUI libraries, but the optional viewer requires a desktop/GUI-capable environment. On Linux, Qt may additionally require the distribution's graphics runtime libraries, such as `libegl1`.
-
-## Serial access, wrong hand, or no samples
-
-1. Confirm the actual port in Windows Device Manager or `ls -l /dev/ttyUSB* /dev/ttyACM*` on Linux.
-2. Verify the current user has that port's access group (`dialout` on Ubuntu, often `uucp` elsewhere). Log out/in after a group change.
-3. Close all other readers. One port must have exactly one active consumer.
-4. Use **1,000,000 baud, 8N1**. Older glove baud rates and packet formats do not apply.
-5. Assign `--left`/`--right`, or the SDK's `hand`, from physical inspection. USB serial identity and packet data do not identify LH/RH.
-6. Run `python examples/test_glove.py PORT --hand lh` (or `rh`) after other readers release the port. It reports raw byte and accepted-frame counts, and can capture a hex dump for support.
-
-A two-second gap without a valid combined sample raises `TimeoutError`, even if malformed data or metadata continues arriving. Inspect the connection/cable/USB path and retry after correcting access/connectivity. The SDK examples propagate errors and close resources; they do not implement automatic reconnection.
-
-On Linux, inspect your actual ports and access groups:
+## Linux serial access
 
 ```bash
 ls -l /dev/ttyUSB* /dev/ttyACM* 2>/dev/null
 groups
+# If the device's group is dialout:
+sudo usermod -aG dialout "$USER"
+# Log out/in, then retry. Some distributions use uucp instead.
 ```
 
-For a device owned by `dialout` on Ubuntu, an administrator can grant group access:
+Run as your normal user. On Windows, check the COM port and vendor driver in Device Manager.
+
+## Diagnose one port
 
 ```bash
-sudo usermod -aG dialout "$USER"
+python examples/test_glove.py COM3 --hand lh --raw-output glove_raw_bytes.txt
 ```
 
-Log out and back in before retrying. Other distributions may use `uucp`. Avoid `sudo python`, which can switch the Python environment. On Windows, inspect COM ports in Device Manager and install the vendor's serial driver if necessary.
+Close other readers first. The script reports bytes/frames and saves a hex dump.
 
-## Time counters reset or samples arrive unevenly
+## Timing and shutdown
 
-`device_timestamp_ms` resets whenever streaming starts, including reconnects. Its unsigned 32-bit range is approximately 49.71 days; firmware overflow behavior has not been measured. `host_timestamp_ns` is the Unix host time when a valid packet is decoded, and serial buffering or processing can affect its spacing. Preserve both rather than substituting one for the other. See [frame timing](api.md#gloveframe).
+- `host_timestamp_ns`: Unix decode time, affected by buffering.
+- `device_timestamp_ms`: elapsed stream counter; resets on start/reconnect. Uint32 (~49.71 days); overflow behavior unverified.
+- Viewer refresh is 25 FPS; observed sensor output was ~125 Hz. Preserve both clocks and every frame in your storage pipeline.
+- Duration expiry, Ctrl+C, window close, and reader/render errors close ports after worker cleanup.
 
-## Force, pressure, or IMU physical units are missing
-
-Use `force=FILE` or the examples’ `--force FILE` with `calibrations/example_perpixel_pressure.json` and its companion guide for the correct physical glove pair. The API requires a contact-free `tare()` or explicit resting `baseline_adc`; the examples take a one-second tare automatically. Calibrated `finger_pressure_kPa_pixels` and `finger_pressure_saturated` each contain 16 entries per finger. Renew tare for each wearer/session.
-
-The supplied file contains kPa lookup values. Both the GUI recorder and SDK output per-pixel kPa and newtons. The SDK uses the confirmed **22.5 mm² active area per pixel** to additionally output `finger_pressure_N_pixels` by default. Override the area through `pixel_area_mm2` (API) or uniform `--pixel-area-mm2 AREA_MM2` (examples). The API can select pressure-only output with `pixel_area_mm2=None`. Preserve raw readings for reproducibility. See [per-pixel calibration](README.md#optional-per-pixel-calibration).
-
-Euler angles are in degrees. Raw gyro/accelerometer values are signed integers with unverified physical scaling; inspected V01.12 samples were zero. The SDK does not transmit or produce a quaternion.
-
-## Viewer, duration, and shutdown
-
-Keep `examples/glove_viewer.py` beside `examples/stream_glove.py`. The optional viewer needs a GUI-capable desktop and may need system Qt graphics libraries. Run without `--viewer` for terminal-only acquisition.
-
-The example refreshes display from the latest frame at 25 FPS while each selected port acquires independently. A slow or stale display does not establish whether acquisition lost samples; examine frame timestamps and your pipeline's storage behavior.
-
-Duration expiry, Ctrl+C, window close, and reader/rendering errors stop and join workers and close all ports. Errors propagate after cleanup. For your own code, use the reader context manager or `disconnect()` in a `finally` block.
+See [API examples](api.md) for calibration and reconnect handling.

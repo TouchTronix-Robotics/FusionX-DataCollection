@@ -2,21 +2,24 @@
 
 [SDK guide](README.md) · [Python API](api.md) · [Troubleshooting](troubleshooting.md)
 
-The diagrams show the GUI's mirrored hand silhouette, current 4×4 patches, and corresponding wire indices. Cell labels use SDK `[row,column]`, with `(0, 0)` at the top left and rows increasing downward. Each `W` label is a zero-based pressure wire-channel index, provided for physical mapping. The palm area has no sensor channels.
+Five 4×4 patches, one bend channel per finger, no palm channels. Diagrams label SDK `[row,column]` and zero-based wire index `W`.
 
-### Left glove — caller assigns `hand="lh"`
+### Left glove — `hand="lh"`
 
-![Left thin-film glove: five 4x4 patches, SDK row/column and wire indices, one bend channel per finger, blank palm](../glove-map-lh.svg)
+![Left glove: SDK coordinates and wire indices](../glove-map-lh.svg)
 
-### Right glove — caller assigns `hand="rh"`
+### Right glove — `hand="rh"`
 
-![Right thin-film glove: five 4x4 patches, SDK row/column and wire indices, one bend channel per finger, blank palm](../glove-map-rh.svg)
+![Right glove: SDK coordinates and wire indices](../glove-map-rh.svg)
 
-For a decoded patch, use `frame.tactile.finger_pressure[finger][4 * row + column]`. The wire relationship is:
+```python
+# frame comes from GloveReader.stream(); rows increase downward.
+row, column = 0, 0  # Top-left pixel.
+value = frame.tactile.finger_pressure["index"][4 * row + column]
 
-```text
+# Pressure wire blocks: thumb=0, index=1, middle=2, ring=3, little=4.
+finger_index = 1
 wire_index = 16 * finger_index + 4 * column + row
-finger_index: thumb=0, index=1, middle=2, ring=3, little=4
 ```
 
-Pressure wire blocks are thumb → little. The five raw bend values are in the opposite order, little → thumb; named `finger_bend` fields already map them to the correct fingers. All 80 pressure and five bend channels are preserved. There is no second bend sensor per finger, palm array, dorsal bend field, or transmitted quaternion in this API.
+All 80 pressure and five bend channels are retained. Named bend fields already map the reversed wire order (little → thumb).
