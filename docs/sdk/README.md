@@ -13,6 +13,8 @@ The SDK handles serial commands, framing, CRC validation, decoding, and optional
 
 Download the compiled SDK **0.5.0** wheel from the [v3.0.0 release](https://github.com/TouchTronix-Robotics/FusionX-DataCollection/releases/tag/v3.0.0): [Windows x86_64](https://github.com/TouchTronix-Robotics/FusionX-DataCollection/releases/download/v3.0.0/tactile_glove_sdk-0.5.0-cp313-cp313-win_amd64.whl) or [Linux x86_64](https://github.com/TouchTronix-Robotics/FusionX-DataCollection/releases/download/v3.0.0/tactile_glove_sdk-0.5.0-cp313-cp313-linux_x86_64.whl). Both require **64-bit CPython 3.13**. A `cp313` wheel cannot be installed into Python 3.12 or 3.14. Install the wheel into your own Python environment; no compiler is required.
 
+If an earlier SDK 0.5.0 build is already installed, add `--force-reinstall` to the wheel installation command. The package version is unchanged, so pip otherwise keeps the installed build.
+
 Linux, from the directory containing your downloaded wheel:
 
 ```bash

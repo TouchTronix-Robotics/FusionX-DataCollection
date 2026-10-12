@@ -18,6 +18,8 @@ Download SDK 0.5.0 from the [v3.0.0 release](https://github.com/TouchTronix-Robo
 
 Check `python --version` and your selected environment. Supplied filenames contain `cp313` and target **64-bit CPython 3.13**. Python 3.12/3.14 and another architecture require different builds. Ask TouchTronix for a matching wheel; do not install the V1/V2 `touchtronix_glove` package for these gloves.
 
+If pip reports SDK 0.5.0 is already installed, use `python -m pip install --force-reinstall PATH_TO_DOWNLOADED_WHEEL`. This replaces an earlier 0.5.0 build with the v3.0.0 release wheel.
+
 The wheel installs pyserial, NumPy, PySide6, pyqtgraph, and their dependencies. The headless API does not import GUI libraries, but the optional viewer requires a desktop/GUI-capable environment. On Linux, Qt may additionally require the distribution's graphics runtime libraries, such as `libegl1`.
 
 ## Serial access, wrong hand, or no samples
