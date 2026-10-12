@@ -132,15 +132,9 @@ Segments rotate after 9,000 head frames on the next head keyframe, approximately
 
 ### Inspect recordings in Foxglove
 
-1. Install [Foxglove Desktop](https://foxglove.dev/download). Local files, layout authoring, and local extensions require the capabilities of a [developer seat](https://docs.foxglove.dev/docs/security/seat-types).
-2. Download [FusionX Tactile 0.6.0](https://raw.githubusercontent.com/TouchTronix-Robotics/FusionX-DataCollection/refs/heads/v3-thimfilm/touchtronixrobotics.fusionx-tactile-panel-0.6.0.foxe) and the [V3 layout](https://raw.githubusercontent.com/TouchTronix-Robotics/FusionX-DataCollection/refs/heads/v3-thimfilm/fusionx_foxglove_layout.json).
-3. Open or drag the `.foxe` into Foxglove and reload. Install it **before** importing the layout.
-4. Choose **Layouts → Import from file…** and select `fusionx_foxglove_layout.json`.
-5. Open the finished `recording_###.mcap` files, then play or scrub the timeline.
+Open finished `recording_###.mcap` files in [Foxglove Desktop](https://foxglove.dev/download). For the FusionX Tactile panel and full workspace, use the matching extension and layout supplied with the GUI package, or request them from TouchTronix. This branch focuses on glove documentation and SDK examples; standalone Foxglove assets are supplied separately.
 
-The layout includes three camera panels, the two-hand FusionX Tactile panel, head acceleration/gyro plots, and glove IMU plots. The panel offers **Raw ADC** and **Pixel pressure**; pressure is available only when the recording contains the calibrated pressure/saturation fields. Pressure uses 0–345 kPa, and amber outlines identify saturated pixels. The raw view and its five bend bars preserve 0–4095 ADC values.
-
-Use [Data Source Info](https://docs.foxglove.dev/docs/visualization/panels/data-source-info) for topic counts/time range and Raw Messages for exact fields. Head stereo video remains side by side; wrist IMU topics are absent. Glove Euler angles are available, but raw gyro/accelerometer units are unverified. See the [MCAP reference](docs/recording-format.md).
+Use [Data Source Info](https://docs.foxglove.dev/docs/visualization/panels/data-source-info) for topic counts/time range and Raw Messages for exact fields. See the [MCAP reference](docs/recording-format.md) and [viewer setup guidance](docs/compatibility.md#foxglove-panel-or-layout-is-missing).
 
 ## SDK quick start
 

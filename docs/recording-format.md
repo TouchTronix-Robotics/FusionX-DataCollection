@@ -66,4 +66,4 @@ Stopping closes the shared capture gate before teardown. No synthetic recording-
 
 ## Foxglove playback
 
-Install the [FusionX Tactile 0.6.0 extension](../touchtronixrobotics.fusionx-tactile-panel-0.6.0.foxe) before importing [the layout](../fusionx_foxglove_layout.json). Open finished segments in Foxglove Desktop and use Data Source Info / Raw Messages to inspect the topics above. The tactile panel has raw ADC and optional per-pixel pressure modes, paired pressure/saturation data, and five bend bars per hand.
+Use the matching FusionX Tactile extension and V3 workspace layout supplied with the GUI package, or request them from TouchTronix. Install the extension before importing the layout; see [viewer setup guidance](compatibility.md#foxglove-panel-or-layout-is-missing). Open finished segments in Foxglove Desktop and use Data Source Info / Raw Messages to inspect the topics above. The tactile panel has raw ADC and optional per-pixel pressure modes, paired pressure/saturation data, and five bend bars per hand.

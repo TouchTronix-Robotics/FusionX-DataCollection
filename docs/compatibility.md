@@ -6,15 +6,17 @@
 |---|---|
 | Documentation branch | `v3-thimfilm` |
 | Gloves | Thin-film V01.12, five 4×4 patches and five bend channels |
-| SDK distribution / import | `tactile-glove-sdk` 0.4.0 / `tactile_glove` |
+| Documented SDK API / import | `tactile-glove-sdk` 0.5.0 / `tactile_glove` |
 | SDK wheel interpreter / platform | CPython 3.13, Windows x86_64 or Linux x86_64 |
 | Application packages | Windows x86_64 ZIP; Linux x86_64 AppImage |
-| Foxglove extension | FusionX Tactile 0.6.0 |
+| Foxglove viewer assets | Supplied with the matching GUI package or separately by TouchTronix |
 | MCAP profile | `touchtronix.raw.v4` |
 
 The documentation reflects application source revision `5e0c572a70216329db423ff8a6b3010b5c4c6948`. GitHub-hosted builds passed for both GUI packages and both Python 3.13 SDK wheels; normal AppImage startup passed on Ubuntu 22.04 and 24.04. These CI checks use simulated hardware or unlicensed startup and do not establish native-resolution hardware throughput.
 
-SDK wheels are privately supplied by TouchTronix and retained in the internal Actions workflow for 14 days. They are not committed on this branch or attached to public application releases. This branch contains customer documentation, SDK example scripts, diagrams, and Foxglove assets; the recording application's source and signing keys are not published here.
+Those build results predate the SDK 0.5.0 API update. Request a validated wheel matching the [current API reference](sdk-api.md).
+
+SDK wheels are privately supplied by TouchTronix and retained in the internal Actions workflow for 14 days. They are not committed on this branch or attached to public application releases. This branch contains customer documentation, SDK example scripts, and diagrams; the recording application's source and signing keys are not published here. Standalone Foxglove extension and layout files are supplied separately.
 
 App/SDK packaging happens on GitHub-hosted runners. End users install supplied packages; Node.js, npm, a compiler, and the private application repository are not required. Building from source is outside this public guide.
 
@@ -60,9 +62,9 @@ A two-second gap without a valid combined sample raises `TimeoutError`, even if 
 
 ## Foxglove panel or layout is missing
 
-Install the 0.6.0 `.foxe`, reload Foxglove, then import the V3 `fusionx_foxglove_layout.json`. The old 0.3.0 panel expects a different glove format. Local file access, layout authoring, and local extension installation need the capabilities described in [Foxglove seat types](https://docs.foxglove.dev/docs/security/seat-types).
+Use the FusionX Tactile extension and V3 workspace layout from your matching GUI package, or request them from TouchTronix. Install the supplied extension, reload Foxglove, then import the supplied layout. Earlier glove configurations require different panels. Local file access, layout authoring, and local extension installation need the capabilities described in [Foxglove seat types](https://docs.foxglove.dev/docs/security/seat-types).
 
-The application package also contains these Foxglove assets. In the Windows ZIP they are under `foxglove/` beside the executable. Inside the Linux AppImage they are at `usr/bin/foxglove`; the public branch's standalone downloads avoid needing to extract the image just to install the panel.
+In the Windows GUI ZIP, the viewer assets are under `foxglove/` beside the executable. Inside the Linux AppImage they are at `usr/bin/foxglove`. Standalone viewer downloads are not hosted on this branch.
 
 ## Stop, disconnects, and slow display
 
