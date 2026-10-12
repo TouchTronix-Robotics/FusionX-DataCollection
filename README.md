@@ -6,6 +6,7 @@ This branch is **`v3-thimfilm`**. It documents five **4×4** finger patches and 
 
 - [GUI data collection guide](#gui-data-collection-guide) — select ports, calibrate, record, and inspect files.
 - [SDK quick start](#sdk-quick-start) — stream one or two explicitly assigned gloves.
+- [SDK Python API](#sdk-python-api) — reader methods, returned fields, units, and timestamps.
 - [Glove sensor diagrams](#glove-configuration-locate-an-sdk-value) — locate a pressure or bend reading.
 - [Calibration reference](docs/calibration.md), [SDK API reference](docs/sdk-api.md), [MCAP recording format](docs/recording-format.md), and [compatibility/troubleshooting](docs/compatibility.md).
 
@@ -143,14 +144,14 @@ Use [Data Source Info](https://docs.foxglove.dev/docs/visualization/panels/data-
 
 ## SDK quick start
 
-TouchTronix supplies matching compiled wheels privately. This branch contains SDK examples and documentation, **not SDK wheels**. Ask for SDK **0.4.0**, matching **CPython 3.13**, your OS, and x86_64 architecture. A `cp313` wheel cannot be installed into Python 3.12 or 3.14. The GUI already contains its Python runtime; the following environment is for independent SDK use.
+TouchTronix supplies matching compiled wheels privately. This branch contains SDK examples and documentation, **not SDK wheels**. This API documentation targets SDK **0.5.0**; request a matching validated wheel for **CPython 3.13**, your OS, and x86_64 architecture. A `cp313` wheel cannot be installed into Python 3.12 or 3.14. The GUI already contains its Python runtime; the following environment is for independent SDK use.
 
 Linux, from the directory containing your supplied wheel:
 
 ```bash
 python3.13 -m venv .venv
 source .venv/bin/activate
-python -m pip install ./tactile_glove_sdk-0.4.0-cp313-cp313-linux_x86_64.whl
+python -m pip install ./tactile_glove_sdk-0.5.0-cp313-cp313-linux_x86_64.whl
 git clone --single-branch --branch v3-thimfilm https://github.com/TouchTronix-Robotics/FusionX-DataCollection.git
 cd FusionX-DataCollection
 python examples/stream_glove.py --left /dev/ttyUSB0 --right /dev/ttyUSB1 --viewer
@@ -161,7 +162,7 @@ Windows PowerShell:
 ```powershell
 py -3.13 -m venv .venv
 .\.venv\Scripts\Activate.ps1
-python -m pip install .\tactile_glove_sdk-0.4.0-cp313-cp313-win_amd64.whl
+python -m pip install .\tactile_glove_sdk-0.5.0-cp313-cp313-win_amd64.whl
 git clone --single-branch --branch v3-thimfilm https://github.com/TouchTronix-Robotics/FusionX-DataCollection.git
 cd FusionX-DataCollection
 python examples/stream_glove.py --left COM3 --right COM4 --viewer
@@ -178,7 +179,9 @@ python examples/test_glove.py /dev/ttyUSB1 --hand rh
 
 The viewer has five 4×4 tactile patches and five raw bend bars per hand. Each selected port has its own acquisition worker; 25 FPS display refresh consumes only the latest readings and does not set the sensor rate. Close the window, press Ctrl+C, or use `--seconds` to stop and close ports. Reader/rendering errors are reported after cleanup. These examples do not require cameras, MCAP, or Foxglove.
 
-## Python API example
+## SDK Python API
+
+The package is `tactile_glove`. Use one synchronous reader per serial port and one consumer per reader. The SDK starts no acquisition thread; the streaming/viewer example supplies one worker per selected port.
 
 ```python
 from tactile_glove import GloveReader
@@ -186,18 +189,61 @@ from tactile_glove import GloveReader
 # Hand comes from this explicit assignment, not the device or port order.
 with GloveReader("/dev/ttyUSB1", hand="rh") as glove:
     frame = next(glove.stream())
-    print(frame.hand)
-    print(frame.tactile.finger_pressure["index"][9])
-    print(frame.tactile.finger_bend["little"])
+    print(frame.hand)  # "rh"
+    print(frame.tactile.finger_pressure["index"][9])  # row 2, column 1
+    print(frame.tactile.finger_bend["little"])  # raw bend ADC
     print(frame.imu.euler_deg)  # pitch, roll, yaw in degrees
     print(frame.host_timestamp_ns, frame.device_timestamp_ms)
 ```
 
-Use one reader per port and one consumer per reader. The default connection speed is **1,000,000 baud, 8N1**. `read_frame()` can return `None` for a short read wait; two seconds without a valid sensor sample raises `TimeoutError`. An SDK caller can disconnect/reconnect explicitly. See the [full API reference](docs/sdk-api.md).
+### Reader configuration and methods
+
+```python
+reader = GloveReader(port="COM3", hand="lh", baudrate=1_000_000)
+```
+
+| Argument | Type / default | Meaning |
+|---|---|---|
+| `port` | Required `str` | One explicit Linux device path or Windows COM port. Create a separate reader for each glove. |
+| `hand` | `str`, `"lh"` | Caller-assigned `"lh"` or `"rh"`; ports and device packets do not identify the hand. |
+| `baudrate` | `int`, `1_000_000` | V01.12 wired connection speed, with 8 data bits, no parity, and one stop bit. |
+
+| Method / usage | Result and behavior |
+|---|---|
+| `connect()` | Opens the port, stops any stale stream, queries firmware/battery, then starts combined samples. Connecting again restarts the connection and glove time counter. |
+| `disconnect()` | Stops streaming, closes the port, and clears pending input. Repeated calls are safe. |
+| `read_frame()` | Returns one complete `GloveFrame`, or `None` while waiting for a complete valid packet. It can block briefly on a serial read. |
+| `stream()` | Iterator yielding every accepted complete frame, skipping `None` results without resampling. |
+| `with GloveReader(...) as glove:` | Connects on entry and disconnects on exit, including exceptions or Ctrl+C. |
+
+Reading before connecting raises `RuntimeError`; an unsupported hand raises `ValueError`. Port/open/read errors propagate as serial exceptions. Two seconds without a valid combined sample after starting or after the last accepted sample raises `TimeoutError`; metadata and malformed packets do not reset that deadline. The SDK does not reconnect automatically. To recover, disconnect and reconnect explicitly, then create a new `stream()` iterator if the previous one raised.
+
+### Returned fields
+
+Every accepted frame contains both tactile and IMU data. Import the data types with `from tactile_glove import GloveFrame, TactileData, IMUData`.
+
+| Field | Python type / shape | Meaning |
+|---|---|---|
+| `frame.hand` | `str` | Your `"lh"` or `"rh"` assignment. |
+| `frame.host_timestamp_ns` | `int` | Unix host time in nanoseconds when the valid packet is decoded. |
+| `frame.device_timestamp_ms` | `int` | Glove-generated elapsed stream time in milliseconds. |
+| `frame.tactile.finger_pressure` | `dict[str, list[int]]`; five lists of 16 values | All 80 pressure ADC readings, in named row-major 4×4 patches. |
+| `frame.tactile.finger_bend` | `dict[str, int]`; five values | One raw bend ADC reading per finger. |
+| `frame.imu.euler_deg` | `tuple[float, float, float]` | `(pitch, roll, yaw)` in degrees, preserving the device convention. |
+| `frame.imu.gyro_raw` | `tuple[int, int, int]` | Signed 16-bit `(x, y, z)` gyroscope readings. |
+| `frame.imu.accel_raw` | `tuple[int, int, int]` | Signed 16-bit `(x, y, z)` accelerometer readings. |
+
+`FINGER_NAMES` is `["thumb", "index", "middle", "ring", "little"]`; `ADC_MAX` is **4096**. Pressure and bend values retain their native **0–4096** range. Access a pressure pixel as `frame.tactile.finger_pressure[finger][4 * row + column]`, where row and column are 0–3. The SDK returns raw ADC values and does not load calibration files or produce calibrated force, pressure, or bend angles.
+
+The two timestamps are separate clocks. The unsigned 32-bit `device_timestamp_ms` starts at zero whenever streaming starts, including reconnects, and represents up to 4,294,967,295 ms (about 49.71 days). Firmware overflow behavior remains unverified. Healthy V01.12 output measured 8 ms between samples (125 Hz); this is an observed output rate. Host timestamps can include serial buffering and processing delay. Convert host nanoseconds to seconds with `frame.host_timestamp_ns / 1_000_000_000`.
+
+The glove's raw gyroscope/accelerometer scaling and usable output remain unverified: inspected V01.12 samples returned zeros for those fields. The SDK preserves raw Euler angles without hand-dependent sign changes; no quaternion is transmitted.
+
+SDK 0.5.0 removes `message_sequence`, `tactile.pressure_raw`, `tactile.bend_raw`, `tactile.raw_bytes`, and `imu.raw_bytes` from the public API. All 85 tactile/bend channels remain in the named finger fields. This change applies to the SDK API; the application recording format is described separately in the [MCAP reference](docs/recording-format.md). See the [full SDK API reference](docs/sdk-api.md) for further details.
 
 ## Glove configuration: locate an SDK value
 
-The diagrams show the GUI's mirrored hand silhouette, current 4×4 patches, and corresponding wire indices. Cell labels use SDK `[row,column]`, with the first decoded row displayed at the bottom. Each `W` label is a zero-based `pressure_raw` index. The palm area has no sensor channels.
+The diagrams show the GUI's mirrored hand silhouette, current 4×4 patches, and corresponding wire indices. Cell labels use SDK `[row,column]`, with the first decoded row displayed at the bottom. Each `W` label is a zero-based pressure wire-channel index, provided for physical mapping. The palm area has no sensor channels.
 
 ### Left glove — caller assigns `hand="lh"`
 
