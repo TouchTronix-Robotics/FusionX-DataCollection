@@ -1,0 +1,433 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1900" height="1220" viewBox="0 0 1900 1220">
+<title>RH V01.12 glove: top-left row-major pixel indexing</title>
+<desc>Five 4 by 4 finger patches. Each cell is labelled with decoded row and column and its original pressure wire index. There are no palm sensors.</desc>
+<style>text{font-family:DejaVu Sans,sans-serif;fill:#1d304c}.heading{font-size:44px;font-weight:700}.finger{font-size:29px;font-weight:700}.pixel{font-size:20px;font-weight:700}.wire{font-size:18px;fill:#4b617d}.note{font-size:25px}.small{font-size:22px;fill:#4b617d}</style>
+<rect width="1900" height="1220" fill="#f8fbff"/>
+<text x="65" y="75" class="heading" text-anchor="start">RIGHT thin-film glove · caller assigns hand="rh"</text>
+<text x="65" y="123" class="note" text-anchor="start">V01.12 | Five 4×4 tactile patches | One bend channel per finger | ADC 0–4096</text>
+<text x="648" y="215" class="finger" text-anchor="middle">INDEX</text>
+<g data-finger="index" data-row="0" data-column="0" data-wire-index="16">
+<rect x="530" y="235" width="56" height="56" rx="5" fill="#e2eefb" stroke="#9eb1c9" stroke-width="1.5"/>
+<text x="558" y="260" class="pixel" text-anchor="middle">[0,0]</text>
+<text x="558" y="284" class="wire" text-anchor="middle">W16</text>
+</g>
+<g data-finger="index" data-row="0" data-column="1" data-wire-index="20">
+<rect x="590" y="235" width="56" height="56" rx="5" fill="#e2eefb" stroke="#9eb1c9" stroke-width="1.5"/>
+<text x="618" y="260" class="pixel" text-anchor="middle">[0,1]</text>
+<text x="618" y="284" class="wire" text-anchor="middle">W20</text>
+</g>
+<g data-finger="index" data-row="0" data-column="2" data-wire-index="24">
+<rect x="650" y="235" width="56" height="56" rx="5" fill="#e2eefb" stroke="#9eb1c9" stroke-width="1.5"/>
+<text x="678" y="260" class="pixel" text-anchor="middle">[0,2]</text>
+<text x="678" y="284" class="wire" text-anchor="middle">W24</text>
+</g>
+<g data-finger="index" data-row="0" data-column="3" data-wire-index="28">
+<rect x="710" y="235" width="56" height="56" rx="5" fill="#e2eefb" stroke="#9eb1c9" stroke-width="1.5"/>
+<text x="738" y="260" class="pixel" text-anchor="middle">[0,3]</text>
+<text x="738" y="284" class="wire" text-anchor="middle">W28</text>
+</g>
+<g data-finger="index" data-row="1" data-column="0" data-wire-index="17">
+<rect x="530" y="295" width="56" height="56" rx="5" fill="#e2eefb" stroke="#9eb1c9" stroke-width="1.5"/>
+<text x="558" y="320" class="pixel" text-anchor="middle">[1,0]</text>
+<text x="558" y="344" class="wire" text-anchor="middle">W17</text>
+</g>
+<g data-finger="index" data-row="1" data-column="1" data-wire-index="21">
+<rect x="590" y="295" width="56" height="56" rx="5" fill="#e2eefb" stroke="#9eb1c9" stroke-width="1.5"/>
+<text x="618" y="320" class="pixel" text-anchor="middle">[1,1]</text>
+<text x="618" y="344" class="wire" text-anchor="middle">W21</text>
+</g>
+<g data-finger="index" data-row="1" data-column="2" data-wire-index="25">
+<rect x="650" y="295" width="56" height="56" rx="5" fill="#e2eefb" stroke="#9eb1c9" stroke-width="1.5"/>
+<text x="678" y="320" class="pixel" text-anchor="middle">[1,2]</text>
+<text x="678" y="344" class="wire" text-anchor="middle">W25</text>
+</g>
+<g data-finger="index" data-row="1" data-column="3" data-wire-index="29">
+<rect x="710" y="295" width="56" height="56" rx="5" fill="#e2eefb" stroke="#9eb1c9" stroke-width="1.5"/>
+<text x="738" y="320" class="pixel" text-anchor="middle">[1,3]</text>
+<text x="738" y="344" class="wire" text-anchor="middle">W29</text>
+</g>
+<g data-finger="index" data-row="2" data-column="0" data-wire-index="18">
+<rect x="530" y="355" width="56" height="56" rx="5" fill="#e2eefb" stroke="#9eb1c9" stroke-width="1.5"/>
+<text x="558" y="380" class="pixel" text-anchor="middle">[2,0]</text>
+<text x="558" y="404" class="wire" text-anchor="middle">W18</text>
+</g>
+<g data-finger="index" data-row="2" data-column="1" data-wire-index="22">
+<rect x="590" y="355" width="56" height="56" rx="5" fill="#a6d6ff" stroke="#2683d8" stroke-width="3"/>
+<text x="618" y="380" class="pixel" text-anchor="middle">[2,1]</text>
+<text x="618" y="404" class="wire" text-anchor="middle">W22</text>
+</g>
+<g data-finger="index" data-row="2" data-column="2" data-wire-index="26">
+<rect x="650" y="355" width="56" height="56" rx="5" fill="#e2eefb" stroke="#9eb1c9" stroke-width="1.5"/>
+<text x="678" y="380" class="pixel" text-anchor="middle">[2,2]</text>
+<text x="678" y="404" class="wire" text-anchor="middle">W26</text>
+</g>
+<g data-finger="index" data-row="2" data-column="3" data-wire-index="30">
+<rect x="710" y="355" width="56" height="56" rx="5" fill="#e2eefb" stroke="#9eb1c9" stroke-width="1.5"/>
+<text x="738" y="380" class="pixel" text-anchor="middle">[2,3]</text>
+<text x="738" y="404" class="wire" text-anchor="middle">W30</text>
+</g>
+<g data-finger="index" data-row="3" data-column="0" data-wire-index="19">
+<rect x="530" y="415" width="56" height="56" rx="5" fill="#e2eefb" stroke="#9eb1c9" stroke-width="1.5"/>
+<text x="558" y="440" class="pixel" text-anchor="middle">[3,0]</text>
+<text x="558" y="464" class="wire" text-anchor="middle">W19</text>
+</g>
+<g data-finger="index" data-row="3" data-column="1" data-wire-index="23">
+<rect x="590" y="415" width="56" height="56" rx="5" fill="#e2eefb" stroke="#9eb1c9" stroke-width="1.5"/>
+<text x="618" y="440" class="pixel" text-anchor="middle">[3,1]</text>
+<text x="618" y="464" class="wire" text-anchor="middle">W23</text>
+</g>
+<g data-finger="index" data-row="3" data-column="2" data-wire-index="27">
+<rect x="650" y="415" width="56" height="56" rx="5" fill="#e2eefb" stroke="#9eb1c9" stroke-width="1.5"/>
+<text x="678" y="440" class="pixel" text-anchor="middle">[3,2]</text>
+<text x="678" y="464" class="wire" text-anchor="middle">W27</text>
+</g>
+<g data-finger="index" data-row="3" data-column="3" data-wire-index="31">
+<rect x="710" y="415" width="56" height="56" rx="5" fill="#e2eefb" stroke="#9eb1c9" stroke-width="1.5"/>
+<text x="738" y="440" class="pixel" text-anchor="middle">[3,3]</text>
+<text x="738" y="464" class="wire" text-anchor="middle">W31</text>
+</g>
+<text x="948" y="215" class="finger" text-anchor="middle">MIDDLE</text>
+<g data-finger="middle" data-row="0" data-column="0" data-wire-index="32">
+<rect x="830" y="235" width="56" height="56" rx="5" fill="#e6f2e8" stroke="#9eb1c9" stroke-width="1.5"/>
+<text x="858" y="260" class="pixel" text-anchor="middle">[0,0]</text>
+<text x="858" y="284" class="wire" text-anchor="middle">W32</text>
+</g>
+<g data-finger="middle" data-row="0" data-column="1" data-wire-index="36">
+<rect x="890" y="235" width="56" height="56" rx="5" fill="#e6f2e8" stroke="#9eb1c9" stroke-width="1.5"/>
+<text x="918" y="260" class="pixel" text-anchor="middle">[0,1]</text>
+<text x="918" y="284" class="wire" text-anchor="middle">W36</text>
+</g>
+<g data-finger="middle" data-row="0" data-column="2" data-wire-index="40">
+<rect x="950" y="235" width="56" height="56" rx="5" fill="#e6f2e8" stroke="#9eb1c9" stroke-width="1.5"/>
+<text x="978" y="260" class="pixel" text-anchor="middle">[0,2]</text>
+<text x="978" y="284" class="wire" text-anchor="middle">W40</text>
+</g>
+<g data-finger="middle" data-row="0" data-column="3" data-wire-index="44">
+<rect x="1010" y="235" width="56" height="56" rx="5" fill="#e6f2e8" stroke="#9eb1c9" stroke-width="1.5"/>
+<text x="1038" y="260" class="pixel" text-anchor="middle">[0,3]</text>
+<text x="1038" y="284" class="wire" text-anchor="middle">W44</text>
+</g>
+<g data-finger="middle" data-row="1" data-column="0" data-wire-index="33">
+<rect x="830" y="295" width="56" height="56" rx="5" fill="#e6f2e8" stroke="#9eb1c9" stroke-width="1.5"/>
+<text x="858" y="320" class="pixel" text-anchor="middle">[1,0]</text>
+<text x="858" y="344" class="wire" text-anchor="middle">W33</text>
+</g>
+<g data-finger="middle" data-row="1" data-column="1" data-wire-index="37">
+<rect x="890" y="295" width="56" height="56" rx="5" fill="#e6f2e8" stroke="#9eb1c9" stroke-width="1.5"/>
+<text x="918" y="320" class="pixel" text-anchor="middle">[1,1]</text>
+<text x="918" y="344" class="wire" text-anchor="middle">W37</text>
+</g>
+<g data-finger="middle" data-row="1" data-column="2" data-wire-index="41">
+<rect x="950" y="295" width="56" height="56" rx="5" fill="#e6f2e8" stroke="#9eb1c9" stroke-width="1.5"/>
+<text x="978" y="320" class="pixel" text-anchor="middle">[1,2]</text>
+<text x="978" y="344" class="wire" text-anchor="middle">W41</text>
+</g>
+<g data-finger="middle" data-row="1" data-column="3" data-wire-index="45">
+<rect x="1010" y="295" width="56" height="56" rx="5" fill="#e6f2e8" stroke="#9eb1c9" stroke-width="1.5"/>
+<text x="1038" y="320" class="pixel" text-anchor="middle">[1,3]</text>
+<text x="1038" y="344" class="wire" text-anchor="middle">W45</text>
+</g>
+<g data-finger="middle" data-row="2" data-column="0" data-wire-index="34">
+<rect x="830" y="355" width="56" height="56" rx="5" fill="#e6f2e8" stroke="#9eb1c9" stroke-width="1.5"/>
+<text x="858" y="380" class="pixel" text-anchor="middle">[2,0]</text>
+<text x="858" y="404" class="wire" text-anchor="middle">W34</text>
+</g>
+<g data-finger="middle" data-row="2" data-column="1" data-wire-index="38">
+<rect x="890" y="355" width="56" height="56" rx="5" fill="#e6f2e8" stroke="#9eb1c9" stroke-width="1.5"/>
+<text x="918" y="380" class="pixel" text-anchor="middle">[2,1]</text>
+<text x="918" y="404" class="wire" text-anchor="middle">W38</text>
+</g>
+<g data-finger="middle" data-row="2" data-column="2" data-wire-index="42">
+<rect x="950" y="355" width="56" height="56" rx="5" fill="#e6f2e8" stroke="#9eb1c9" stroke-width="1.5"/>
+<text x="978" y="380" class="pixel" text-anchor="middle">[2,2]</text>
+<text x="978" y="404" class="wire" text-anchor="middle">W42</text>
+</g>
+<g data-finger="middle" data-row="2" data-column="3" data-wire-index="46">
+<rect x="1010" y="355" width="56" height="56" rx="5" fill="#e6f2e8" stroke="#9eb1c9" stroke-width="1.5"/>
+<text x="1038" y="380" class="pixel" text-anchor="middle">[2,3]</text>
+<text x="1038" y="404" class="wire" text-anchor="middle">W46</text>
+</g>
+<g data-finger="middle" data-row="3" data-column="0" data-wire-index="35">
+<rect x="830" y="415" width="56" height="56" rx="5" fill="#e6f2e8" stroke="#9eb1c9" stroke-width="1.5"/>
+<text x="858" y="440" class="pixel" text-anchor="middle">[3,0]</text>
+<text x="858" y="464" class="wire" text-anchor="middle">W35</text>
+</g>
+<g data-finger="middle" data-row="3" data-column="1" data-wire-index="39">
+<rect x="890" y="415" width="56" height="56" rx="5" fill="#e6f2e8" stroke="#9eb1c9" stroke-width="1.5"/>
+<text x="918" y="440" class="pixel" text-anchor="middle">[3,1]</text>
+<text x="918" y="464" class="wire" text-anchor="middle">W39</text>
+</g>
+<g data-finger="middle" data-row="3" data-column="2" data-wire-index="43">
+<rect x="950" y="415" width="56" height="56" rx="5" fill="#e6f2e8" stroke="#9eb1c9" stroke-width="1.5"/>
+<text x="978" y="440" class="pixel" text-anchor="middle">[3,2]</text>
+<text x="978" y="464" class="wire" text-anchor="middle">W43</text>
+</g>
+<g data-finger="middle" data-row="3" data-column="3" data-wire-index="47">
+<rect x="1010" y="415" width="56" height="56" rx="5" fill="#e6f2e8" stroke="#9eb1c9" stroke-width="1.5"/>
+<text x="1038" y="440" class="pixel" text-anchor="middle">[3,3]</text>
+<text x="1038" y="464" class="wire" text-anchor="middle">W47</text>
+</g>
+<text x="1248" y="215" class="finger" text-anchor="middle">RING</text>
+<g data-finger="ring" data-row="0" data-column="0" data-wire-index="48">
+<rect x="1130" y="235" width="56" height="56" rx="5" fill="#f1e8f9" stroke="#9eb1c9" stroke-width="1.5"/>
+<text x="1158" y="260" class="pixel" text-anchor="middle">[0,0]</text>
+<text x="1158" y="284" class="wire" text-anchor="middle">W48</text>
+</g>
+<g data-finger="ring" data-row="0" data-column="1" data-wire-index="52">
+<rect x="1190" y="235" width="56" height="56" rx="5" fill="#f1e8f9" stroke="#9eb1c9" stroke-width="1.5"/>
+<text x="1218" y="260" class="pixel" text-anchor="middle">[0,1]</text>
+<text x="1218" y="284" class="wire" text-anchor="middle">W52</text>
+</g>
+<g data-finger="ring" data-row="0" data-column="2" data-wire-index="56">
+<rect x="1250" y="235" width="56" height="56" rx="5" fill="#f1e8f9" stroke="#9eb1c9" stroke-width="1.5"/>
+<text x="1278" y="260" class="pixel" text-anchor="middle">[0,2]</text>
+<text x="1278" y="284" class="wire" text-anchor="middle">W56</text>
+</g>
+<g data-finger="ring" data-row="0" data-column="3" data-wire-index="60">
+<rect x="1310" y="235" width="56" height="56" rx="5" fill="#f1e8f9" stroke="#9eb1c9" stroke-width="1.5"/>
+<text x="1338" y="260" class="pixel" text-anchor="middle">[0,3]</text>
+<text x="1338" y="284" class="wire" text-anchor="middle">W60</text>
+</g>
+<g data-finger="ring" data-row="1" data-column="0" data-wire-index="49">
+<rect x="1130" y="295" width="56" height="56" rx="5" fill="#f1e8f9" stroke="#9eb1c9" stroke-width="1.5"/>
+<text x="1158" y="320" class="pixel" text-anchor="middle">[1,0]</text>
+<text x="1158" y="344" class="wire" text-anchor="middle">W49</text>
+</g>
+<g data-finger="ring" data-row="1" data-column="1" data-wire-index="53">
+<rect x="1190" y="295" width="56" height="56" rx="5" fill="#f1e8f9" stroke="#9eb1c9" stroke-width="1.5"/>
+<text x="1218" y="320" class="pixel" text-anchor="middle">[1,1]</text>
+<text x="1218" y="344" class="wire" text-anchor="middle">W53</text>
+</g>
+<g data-finger="ring" data-row="1" data-column="2" data-wire-index="57">
+<rect x="1250" y="295" width="56" height="56" rx="5" fill="#f1e8f9" stroke="#9eb1c9" stroke-width="1.5"/>
+<text x="1278" y="320" class="pixel" text-anchor="middle">[1,2]</text>
+<text x="1278" y="344" class="wire" text-anchor="middle">W57</text>
+</g>
+<g data-finger="ring" data-row="1" data-column="3" data-wire-index="61">
+<rect x="1310" y="295" width="56" height="56" rx="5" fill="#f1e8f9" stroke="#9eb1c9" stroke-width="1.5"/>
+<text x="1338" y="320" class="pixel" text-anchor="middle">[1,3]</text>
+<text x="1338" y="344" class="wire" text-anchor="middle">W61</text>
+</g>
+<g data-finger="ring" data-row="2" data-column="0" data-wire-index="50">
+<rect x="1130" y="355" width="56" height="56" rx="5" fill="#f1e8f9" stroke="#9eb1c9" stroke-width="1.5"/>
+<text x="1158" y="380" class="pixel" text-anchor="middle">[2,0]</text>
+<text x="1158" y="404" class="wire" text-anchor="middle">W50</text>
+</g>
+<g data-finger="ring" data-row="2" data-column="1" data-wire-index="54">
+<rect x="1190" y="355" width="56" height="56" rx="5" fill="#f1e8f9" stroke="#9eb1c9" stroke-width="1.5"/>
+<text x="1218" y="380" class="pixel" text-anchor="middle">[2,1]</text>
+<text x="1218" y="404" class="wire" text-anchor="middle">W54</text>
+</g>
+<g data-finger="ring" data-row="2" data-column="2" data-wire-index="58">
+<rect x="1250" y="355" width="56" height="56" rx="5" fill="#f1e8f9" stroke="#9eb1c9" stroke-width="1.5"/>
+<text x="1278" y="380" class="pixel" text-anchor="middle">[2,2]</text>
+<text x="1278" y="404" class="wire" text-anchor="middle">W58</text>
+</g>
+<g data-finger="ring" data-row="2" data-column="3" data-wire-index="62">
+<rect x="1310" y="355" width="56" height="56" rx="5" fill="#f1e8f9" stroke="#9eb1c9" stroke-width="1.5"/>
+<text x="1338" y="380" class="pixel" text-anchor="middle">[2,3]</text>
+<text x="1338" y="404" class="wire" text-anchor="middle">W62</text>
+</g>
+<g data-finger="ring" data-row="3" data-column="0" data-wire-index="51">
+<rect x="1130" y="415" width="56" height="56" rx="5" fill="#f1e8f9" stroke="#9eb1c9" stroke-width="1.5"/>
+<text x="1158" y="440" class="pixel" text-anchor="middle">[3,0]</text>
+<text x="1158" y="464" class="wire" text-anchor="middle">W51</text>
+</g>
+<g data-finger="ring" data-row="3" data-column="1" data-wire-index="55">
+<rect x="1190" y="415" width="56" height="56" rx="5" fill="#f1e8f9" stroke="#9eb1c9" stroke-width="1.5"/>
+<text x="1218" y="440" class="pixel" text-anchor="middle">[3,1]</text>
+<text x="1218" y="464" class="wire" text-anchor="middle">W55</text>
+</g>
+<g data-finger="ring" data-row="3" data-column="2" data-wire-index="59">
+<rect x="1250" y="415" width="56" height="56" rx="5" fill="#f1e8f9" stroke="#9eb1c9" stroke-width="1.5"/>
+<text x="1278" y="440" class="pixel" text-anchor="middle">[3,2]</text>
+<text x="1278" y="464" class="wire" text-anchor="middle">W59</text>
+</g>
+<g data-finger="ring" data-row="3" data-column="3" data-wire-index="63">
+<rect x="1310" y="415" width="56" height="56" rx="5" fill="#f1e8f9" stroke="#9eb1c9" stroke-width="1.5"/>
+<text x="1338" y="440" class="pixel" text-anchor="middle">[3,3]</text>
+<text x="1338" y="464" class="wire" text-anchor="middle">W63</text>
+</g>
+<text x="1548" y="215" class="finger" text-anchor="middle">LITTLE</text>
+<g data-finger="little" data-row="0" data-column="0" data-wire-index="64">
+<rect x="1430" y="235" width="56" height="56" rx="5" fill="#f0ece7" stroke="#9eb1c9" stroke-width="1.5"/>
+<text x="1458" y="260" class="pixel" text-anchor="middle">[0,0]</text>
+<text x="1458" y="284" class="wire" text-anchor="middle">W64</text>
+</g>
+<g data-finger="little" data-row="0" data-column="1" data-wire-index="68">
+<rect x="1490" y="235" width="56" height="56" rx="5" fill="#f0ece7" stroke="#9eb1c9" stroke-width="1.5"/>
+<text x="1518" y="260" class="pixel" text-anchor="middle">[0,1]</text>
+<text x="1518" y="284" class="wire" text-anchor="middle">W68</text>
+</g>
+<g data-finger="little" data-row="0" data-column="2" data-wire-index="72">
+<rect x="1550" y="235" width="56" height="56" rx="5" fill="#f0ece7" stroke="#9eb1c9" stroke-width="1.5"/>
+<text x="1578" y="260" class="pixel" text-anchor="middle">[0,2]</text>
+<text x="1578" y="284" class="wire" text-anchor="middle">W72</text>
+</g>
+<g data-finger="little" data-row="0" data-column="3" data-wire-index="76">
+<rect x="1610" y="235" width="56" height="56" rx="5" fill="#f0ece7" stroke="#9eb1c9" stroke-width="1.5"/>
+<text x="1638" y="260" class="pixel" text-anchor="middle">[0,3]</text>
+<text x="1638" y="284" class="wire" text-anchor="middle">W76</text>
+</g>
+<g data-finger="little" data-row="1" data-column="0" data-wire-index="65">
+<rect x="1430" y="295" width="56" height="56" rx="5" fill="#f0ece7" stroke="#9eb1c9" stroke-width="1.5"/>
+<text x="1458" y="320" class="pixel" text-anchor="middle">[1,0]</text>
+<text x="1458" y="344" class="wire" text-anchor="middle">W65</text>
+</g>
+<g data-finger="little" data-row="1" data-column="1" data-wire-index="69">
+<rect x="1490" y="295" width="56" height="56" rx="5" fill="#f0ece7" stroke="#9eb1c9" stroke-width="1.5"/>
+<text x="1518" y="320" class="pixel" text-anchor="middle">[1,1]</text>
+<text x="1518" y="344" class="wire" text-anchor="middle">W69</text>
+</g>
+<g data-finger="little" data-row="1" data-column="2" data-wire-index="73">
+<rect x="1550" y="295" width="56" height="56" rx="5" fill="#f0ece7" stroke="#9eb1c9" stroke-width="1.5"/>
+<text x="1578" y="320" class="pixel" text-anchor="middle">[1,2]</text>
+<text x="1578" y="344" class="wire" text-anchor="middle">W73</text>
+</g>
+<g data-finger="little" data-row="1" data-column="3" data-wire-index="77">
+<rect x="1610" y="295" width="56" height="56" rx="5" fill="#f0ece7" stroke="#9eb1c9" stroke-width="1.5"/>
+<text x="1638" y="320" class="pixel" text-anchor="middle">[1,3]</text>
+<text x="1638" y="344" class="wire" text-anchor="middle">W77</text>
+</g>
+<g data-finger="little" data-row="2" data-column="0" data-wire-index="66">
+<rect x="1430" y="355" width="56" height="56" rx="5" fill="#f0ece7" stroke="#9eb1c9" stroke-width="1.5"/>
+<text x="1458" y="380" class="pixel" text-anchor="middle">[2,0]</text>
+<text x="1458" y="404" class="wire" text-anchor="middle">W66</text>
+</g>
+<g data-finger="little" data-row="2" data-column="1" data-wire-index="70">
+<rect x="1490" y="355" width="56" height="56" rx="5" fill="#f0ece7" stroke="#9eb1c9" stroke-width="1.5"/>
+<text x="1518" y="380" class="pixel" text-anchor="middle">[2,1]</text>
+<text x="1518" y="404" class="wire" text-anchor="middle">W70</text>
+</g>
+<g data-finger="little" data-row="2" data-column="2" data-wire-index="74">
+<rect x="1550" y="355" width="56" height="56" rx="5" fill="#f0ece7" stroke="#9eb1c9" stroke-width="1.5"/>
+<text x="1578" y="380" class="pixel" text-anchor="middle">[2,2]</text>
+<text x="1578" y="404" class="wire" text-anchor="middle">W74</text>
+</g>
+<g data-finger="little" data-row="2" data-column="3" data-wire-index="78">
+<rect x="1610" y="355" width="56" height="56" rx="5" fill="#f0ece7" stroke="#9eb1c9" stroke-width="1.5"/>
+<text x="1638" y="380" class="pixel" text-anchor="middle">[2,3]</text>
+<text x="1638" y="404" class="wire" text-anchor="middle">W78</text>
+</g>
+<g data-finger="little" data-row="3" data-column="0" data-wire-index="67">
+<rect x="1430" y="415" width="56" height="56" rx="5" fill="#f0ece7" stroke="#9eb1c9" stroke-width="1.5"/>
+<text x="1458" y="440" class="pixel" text-anchor="middle">[3,0]</text>
+<text x="1458" y="464" class="wire" text-anchor="middle">W67</text>
+</g>
+<g data-finger="little" data-row="3" data-column="1" data-wire-index="71">
+<rect x="1490" y="415" width="56" height="56" rx="5" fill="#f0ece7" stroke="#9eb1c9" stroke-width="1.5"/>
+<text x="1518" y="440" class="pixel" text-anchor="middle">[3,1]</text>
+<text x="1518" y="464" class="wire" text-anchor="middle">W71</text>
+</g>
+<g data-finger="little" data-row="3" data-column="2" data-wire-index="75">
+<rect x="1550" y="415" width="56" height="56" rx="5" fill="#f0ece7" stroke="#9eb1c9" stroke-width="1.5"/>
+<text x="1578" y="440" class="pixel" text-anchor="middle">[3,2]</text>
+<text x="1578" y="464" class="wire" text-anchor="middle">W75</text>
+</g>
+<g data-finger="little" data-row="3" data-column="3" data-wire-index="79">
+<rect x="1610" y="415" width="56" height="56" rx="5" fill="#f0ece7" stroke="#9eb1c9" stroke-width="1.5"/>
+<text x="1638" y="440" class="pixel" text-anchor="middle">[3,3]</text>
+<text x="1638" y="464" class="wire" text-anchor="middle">W79</text>
+</g>
+<text x="348" y="515" class="finger" text-anchor="middle">THUMB</text>
+<g data-finger="thumb" data-row="0" data-column="0" data-wire-index="0">
+<rect x="230" y="535" width="56" height="56" rx="5" fill="#fff2d3" stroke="#9eb1c9" stroke-width="1.5"/>
+<text x="258" y="560" class="pixel" text-anchor="middle">[0,0]</text>
+<text x="258" y="584" class="wire" text-anchor="middle">W0</text>
+</g>
+<g data-finger="thumb" data-row="0" data-column="1" data-wire-index="4">
+<rect x="290" y="535" width="56" height="56" rx="5" fill="#fff2d3" stroke="#9eb1c9" stroke-width="1.5"/>
+<text x="318" y="560" class="pixel" text-anchor="middle">[0,1]</text>
+<text x="318" y="584" class="wire" text-anchor="middle">W4</text>
+</g>
+<g data-finger="thumb" data-row="0" data-column="2" data-wire-index="8">
+<rect x="350" y="535" width="56" height="56" rx="5" fill="#fff2d3" stroke="#9eb1c9" stroke-width="1.5"/>
+<text x="378" y="560" class="pixel" text-anchor="middle">[0,2]</text>
+<text x="378" y="584" class="wire" text-anchor="middle">W8</text>
+</g>
+<g data-finger="thumb" data-row="0" data-column="3" data-wire-index="12">
+<rect x="410" y="535" width="56" height="56" rx="5" fill="#fff2d3" stroke="#9eb1c9" stroke-width="1.5"/>
+<text x="438" y="560" class="pixel" text-anchor="middle">[0,3]</text>
+<text x="438" y="584" class="wire" text-anchor="middle">W12</text>
+</g>
+<g data-finger="thumb" data-row="1" data-column="0" data-wire-index="1">
+<rect x="230" y="595" width="56" height="56" rx="5" fill="#fff2d3" stroke="#9eb1c9" stroke-width="1.5"/>
+<text x="258" y="620" class="pixel" text-anchor="middle">[1,0]</text>
+<text x="258" y="644" class="wire" text-anchor="middle">W1</text>
+</g>
+<g data-finger="thumb" data-row="1" data-column="1" data-wire-index="5">
+<rect x="290" y="595" width="56" height="56" rx="5" fill="#fff2d3" stroke="#9eb1c9" stroke-width="1.5"/>
+<text x="318" y="620" class="pixel" text-anchor="middle">[1,1]</text>
+<text x="318" y="644" class="wire" text-anchor="middle">W5</text>
+</g>
+<g data-finger="thumb" data-row="1" data-column="2" data-wire-index="9">
+<rect x="350" y="595" width="56" height="56" rx="5" fill="#fff2d3" stroke="#9eb1c9" stroke-width="1.5"/>
+<text x="378" y="620" class="pixel" text-anchor="middle">[1,2]</text>
+<text x="378" y="644" class="wire" text-anchor="middle">W9</text>
+</g>
+<g data-finger="thumb" data-row="1" data-column="3" data-wire-index="13">
+<rect x="410" y="595" width="56" height="56" rx="5" fill="#fff2d3" stroke="#9eb1c9" stroke-width="1.5"/>
+<text x="438" y="620" class="pixel" text-anchor="middle">[1,3]</text>
+<text x="438" y="644" class="wire" text-anchor="middle">W13</text>
+</g>
+<g data-finger="thumb" data-row="2" data-column="0" data-wire-index="2">
+<rect x="230" y="655" width="56" height="56" rx="5" fill="#fff2d3" stroke="#9eb1c9" stroke-width="1.5"/>
+<text x="258" y="680" class="pixel" text-anchor="middle">[2,0]</text>
+<text x="258" y="704" class="wire" text-anchor="middle">W2</text>
+</g>
+<g data-finger="thumb" data-row="2" data-column="1" data-wire-index="6">
+<rect x="290" y="655" width="56" height="56" rx="5" fill="#fff2d3" stroke="#9eb1c9" stroke-width="1.5"/>
+<text x="318" y="680" class="pixel" text-anchor="middle">[2,1]</text>
+<text x="318" y="704" class="wire" text-anchor="middle">W6</text>
+</g>
+<g data-finger="thumb" data-row="2" data-column="2" data-wire-index="10">
+<rect x="350" y="655" width="56" height="56" rx="5" fill="#fff2d3" stroke="#9eb1c9" stroke-width="1.5"/>
+<text x="378" y="680" class="pixel" text-anchor="middle">[2,2]</text>
+<text x="378" y="704" class="wire" text-anchor="middle">W10</text>
+</g>
+<g data-finger="thumb" data-row="2" data-column="3" data-wire-index="14">
+<rect x="410" y="655" width="56" height="56" rx="5" fill="#fff2d3" stroke="#9eb1c9" stroke-width="1.5"/>
+<text x="438" y="680" class="pixel" text-anchor="middle">[2,3]</text>
+<text x="438" y="704" class="wire" text-anchor="middle">W14</text>
+</g>
+<g data-finger="thumb" data-row="3" data-column="0" data-wire-index="3">
+<rect x="230" y="715" width="56" height="56" rx="5" fill="#fff2d3" stroke="#9eb1c9" stroke-width="1.5"/>
+<text x="258" y="740" class="pixel" text-anchor="middle">[3,0]</text>
+<text x="258" y="764" class="wire" text-anchor="middle">W3</text>
+</g>
+<g data-finger="thumb" data-row="3" data-column="1" data-wire-index="7">
+<rect x="290" y="715" width="56" height="56" rx="5" fill="#fff2d3" stroke="#9eb1c9" stroke-width="1.5"/>
+<text x="318" y="740" class="pixel" text-anchor="middle">[3,1]</text>
+<text x="318" y="764" class="wire" text-anchor="middle">W7</text>
+</g>
+<g data-finger="thumb" data-row="3" data-column="2" data-wire-index="11">
+<rect x="350" y="715" width="56" height="56" rx="5" fill="#fff2d3" stroke="#9eb1c9" stroke-width="1.5"/>
+<text x="378" y="740" class="pixel" text-anchor="middle">[3,2]</text>
+<text x="378" y="764" class="wire" text-anchor="middle">W11</text>
+</g>
+<g data-finger="thumb" data-row="3" data-column="3" data-wire-index="15">
+<rect x="410" y="715" width="56" height="56" rx="5" fill="#fff2d3" stroke="#9eb1c9" stroke-width="1.5"/>
+<text x="438" y="740" class="pixel" text-anchor="middle">[3,3]</text>
+<text x="438" y="764" class="wire" text-anchor="middle">W15</text>
+</g>
+<text x="1100" y="650" class="note" text-anchor="middle">PALM SPACE: NO SENSOR CHANNELS</text>
+<text x="1100" y="695" class="small" text-anchor="middle">The GUI leaves this area blank.</text>
+<rect x="329" y="875" width="38" height="90" rx="5" fill="#d9e9df"/>
+<text x="348" y="1005" class="note" text-anchor="middle">Thumb</text>
+<text x="348" y="1045" class="small" text-anchor="middle">bend_raw[4]</text>
+<rect x="629" y="875" width="38" height="90" rx="5" fill="#d9e9df"/>
+<text x="648" y="1005" class="note" text-anchor="middle">Index</text>
+<text x="648" y="1045" class="small" text-anchor="middle">bend_raw[3]</text>
+<rect x="929" y="875" width="38" height="90" rx="5" fill="#d9e9df"/>
+<text x="948" y="1005" class="note" text-anchor="middle">Middle</text>
+<text x="948" y="1045" class="small" text-anchor="middle">bend_raw[2]</text>
+<rect x="1229" y="875" width="38" height="90" rx="5" fill="#d9e9df"/>
+<text x="1248" y="1005" class="note" text-anchor="middle">Ring</text>
+<text x="1248" y="1045" class="small" text-anchor="middle">bend_raw[1]</text>
+<rect x="1529" y="875" width="38" height="90" rx="5" fill="#d9e9df"/>
+<text x="1548" y="1005" class="note" text-anchor="middle">Little</text>
+<text x="1548" y="1045" class="small" text-anchor="middle">bend_raw[0]</text>
+<text x="65" y="1100" class="small" text-anchor="start">Cell labels: [decoded row,column]; W = original pressure wire index. Row 0 is at the top; column 0 is at the left.</text>
+<text x="65" y="1145" class="note" text-anchor="start">Blue example: finger_pressure["index"][9] → row 2, column 1 → pressure_raw[22]</text>
+<text x="65" y="1187" class="small" text-anchor="start">The parser normalizes pixel order once. Bend fields already map the opposite little→thumb wire order.</text>
+</svg>

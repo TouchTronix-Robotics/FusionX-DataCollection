@@ -23,7 +23,7 @@ reader = GloveReader("COM3", hand="lh", baudrate=1_000_000)
 | `hand` | `"lh"` | Caller-supplied `"lh"` or `"rh"`; device packets have no hand identifier. |
 | `baudrate` | `1_000_000` | Wired V01.12 speed; 8 data bits, no parity, one stop bit. |
 | `force` | `None`, keyword-only | Optional path to supplier per-pixel pressure LUT JSON for this physical glove pair, such as `calibrations/example_perpixel_pressure.json`. |
-| `baseline_adc` | `None`, keyword-only | Optional mapping of five finger names to 16 finite resting ADC values each in 0–4096. Requires `force`; otherwise call `tare()` before reading. |
+| `baseline_adc` | `None`, keyword-only | Optional mapping of five finger names to 16 finite resting ADC values each in 0–4096, in top-left row-major order. Requires `force`; otherwise call `tare()` before reading. |
 | `pixel_area_mm2` | `22.5`, keyword-only | Active area in mm²: one positive finite uniform area or five finger names mapped to 16 areas in decoded patch order. The confirmed default enables per-pixel Newton output with calibration; `None` selects pressure-only output. |
 
 | Operation | Behavior |
@@ -57,7 +57,7 @@ Sending the start command restarts the unsigned 32-bit millisecond counter at ze
 
 | Field | Shape | Values / order |
 |---|---|---|
-| `finger_pressure` | `dict[str, list[int]]` | Five named 4×4 patches, each flattened row-major to 16 entries. |
+| `finger_pressure` | `dict[str, list[int]]` | Five named 4×4 patches, flattened row-major to 16 entries with `(0, 0)` at the top left. |
 | `finger_bend` | `dict[str, int]` | One raw ADC value per named finger. |
 | `finger_pressure_kPa_pixels` | `dict[str, list[float]]` or `None` | Five named lists of 16 calibrated contact pressures in kPa; `None` without calibration. |
 | `finger_pressure_saturated` | `dict[str, list[bool]]` or `None` | Matching saturation flags from original raw ADC `>=4000`; `None` without calibration. |
@@ -70,10 +70,10 @@ For named patch `[row, column]`:
 ```python
 value = frame.tactile.finger_pressure["index"][4 * row + column]
 # Corresponding pressure wire-channel index for the index finger:
-wire_index = 16 + 4 * column + (3 - row)
+wire_index = 16 + 4 * column + row
 ```
 
-See the [left](../glove-map-lh.png) and [right](../glove-map-rh.png) diagrams. The viewer places decoded row zero at the bottom. Each pressure patch is a Python list; reshape its 16 row-major entries to 4×4 when needed. This glove has no palm channels or separate two-value bend/dorsal structure.
+See the [left](../glove-map-lh.svg) and [right](../glove-map-rh.svg) diagrams. The parser returns decoded row zero at the top, so the viewer consumes each patch directly without flipping its data. Each pressure patch is a Python list; reshape its 16 row-major entries to 4×4 when needed. This glove has no palm channels or separate two-value bend/dorsal structure.
 
 ## IMUData
 
@@ -104,11 +104,11 @@ with GloveReader("COM3", hand="lh", force="calibrations/example_perpixel_pressur
     print(frame.tactile.finger_pressure_N_pixels["thumb"])  # 16 Newton values.
 ```
 
-With a recent resting measurement, pass `baseline_adc=resting_adc` to enable calibrated output on the first accepted sample. Tare discards buffered input, consumes fresh samples, and leaves the glove counter running. A failed tare invalidates the previous baseline.
+With a recent resting measurement, pass `baseline_adc=resting_adc` to enable calibrated output on the first accepted sample. Resting measurements must use top-left row-major order; take a fresh tare if they were captured with the former bottom-origin order. Tare discards buffered input, consumes fresh samples, and leaves the glove counter running. A failed tare invalidates the previous baseline.
 
 `force` accepts the supplier JSON with exactly `lh` and `rh`, all five fingers in each hand, and exactly 16 raw pixel keys `r0c0`–`r3c3` per finger. Each table contains 4096 finite nonnegative kPa values, starts at zero, and never decreases. No metadata is required. This file belongs to physical gloves LH_1/RH_1; supply their matching hand assignments. Malformed tables and polynomial calibration files are rejected before a port opens.
 
-The SDK reuses the GUI recorder's lookup preparation and conversion. Decoded patch `[row, col]` uses table `r{col}c{3-row}`. Contact pressure is `max(LUT[live_adc] - LUT[resting_adc], 0)`. Live and resting indices are clamped integers in 0–4095; raw ADC 4096 is preserved in `finger_pressure`. Saturation is based on raw ADC `>=4000`, even when tared pressure is zero. Output retains all 80 pixels without resampling. The guide defines 0–207 kPa calibrated and 207–345 kPa extended; saturated/table-top readings are lower bounds.
+The SDK reuses the GUI recorder's lookup preparation and conversion. Decoded patch `[row, col]` uses table `r{col}c{row}`. Contact pressure is `max(LUT[live_adc] - LUT[resting_adc], 0)`. Live and resting indices are clamped integers in 0–4095; raw ADC 4096 is preserved in `finger_pressure`. Saturation is based on raw ADC `>=4000`, even when tared pressure is zero. Output retains all 80 pixels without resampling. The guide defines 0–207 kPa calibrated and 207–345 kPa extended; saturated/table-top readings are lower bounds.
 
 The supplied file contains kPa lookup values. Both the GUI recorder and SDK output per-pixel kPa and newtons. For these thin-film gloves the confirmed active area is **22.5 mm² per pixel**. The SDK therefore provides `finger_pressure_N_pixels` by default with `force` and a resting baseline: `N = kPa × 22.5 × 0.001 = kPa × 0.0225`. All five fingers retain their 16 individual pixel forces.
 

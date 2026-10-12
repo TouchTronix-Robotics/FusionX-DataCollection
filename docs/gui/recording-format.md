@@ -30,7 +30,7 @@ The current wrists have no factory calibration and produce video only. Wrist IMU
 | `host_timestamp_ns` | Exact integer host timestamp, also used for MCAP log/publish time. |
 | `device_timestamp_ms` | Separate unsigned 32-bit elapsed stream counter; start resets it to zero. |
 | `message_sequence` | Wire NUM; repeated values are allowed. |
-| `finger_pressure` | Five named flattened 4×4 patches, native 0–4096 ADC. |
+| `finger_pressure` | Five named flattened 4×4 patches, native 0–4096 ADC, row-major from the top-left pixel. |
 | `finger_bend` | Five ADC values in thumb/index/middle/ring/little order. |
 | `pressure_raw` | All 80 original pressure wire channels. |
 | `bend_raw` | All five original bend wire channels, little → thumb. |

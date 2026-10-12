@@ -20,13 +20,14 @@ Generated files have the `gloves` wrapper, five named fingers, 16 resting ADC va
   "protocol": "v01.12",
   "finger_names": ["thumb", "index", "middle", "ring", "little"],
   "pixels_per_finger": 16,
+  "pixel_origin": "top_left",
   "adc_max": 4096,
   "pressure_channels": 80,
   "bend_channels": 5
 }
 ```
 
-Use the app to generate the complete file. V1/V2 JQ files and earlier four-finger files are rejected. Selecting an existing username/file for recalibration replaces that file deliberately; choose a new name to preserve it.
+Use the app to generate the complete file. Regenerate wearer calibrations saved before the top-left pixel-origin change; files without `pixel_origin: "top_left"` are rejected. The supplier pressure LUT JSON remains usable unchanged. V1/V2 JQ files and earlier four-finger files are rejected. Selecting an existing username/file for recalibration replaces that file deliberately; choose a new name to preserve it.
 
 ## Supplier per-pixel pressure
 
@@ -40,7 +41,7 @@ For each physical pixel:
 contact_kPa = max(LUT[raw_adc] - LUT[resting_adc], 0)
 ```
 
-Raw ADC values remain in 0–4096; only pressure lookup indices are clamped to 0–4095 because each supplied LUT has 4,096 entries. Subtraction happens after both pressure lookups, not by looking up an ADC difference. The supplied raw LUT key `[r,c]` corresponds to wire index `16*finger + 4*r + c`; decoded patch `[row,col]` therefore uses key `r{col}c{3-row}`.
+Raw ADC values remain in 0–4096; only pressure lookup indices are clamped to 0–4095 because each supplied LUT has 4,096 entries. Subtraction happens after both pressure lookups, not by looking up an ADC difference. The supplied raw LUT key `[r,c]` corresponds to wire index `16*finger + 4*r + c`; decoded patch `[row,col]` therefore uses key `r{col}c{row}`.
 
 Recorded optional fields are:
 

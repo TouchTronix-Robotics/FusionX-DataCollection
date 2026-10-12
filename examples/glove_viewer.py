@@ -45,8 +45,8 @@ class GloveViewer:
             tactile.getAxis("left").setStyle(showValues=False)
             tactile.getAxis("left").setPen(None)
             tactile.getAxis("bottom").setTicks([ticks])
-            # Display the first decoded row at the bottom of each patch.
-            tactile.invertY(False)
+            # Image coordinates increase downward; decoded row 0 is at the top.
+            tactile.invertY(True)
             tactile.setXRange(-0.5, width + 0.5, padding=0)
             tactile.setYRange(0, 4, padding=0)
             tactile.setMouseEnabled(x=False, y=False)
