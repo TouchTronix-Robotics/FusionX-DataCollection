@@ -67,8 +67,8 @@ print(sample.device_timestamp_ms)              # Elapsed milliseconds, not Unix 
 |---|---|---|
 | `finger_pressure` | `dict[str, list[int]]` | Five 4×4 patches, 16 row-major ADC values each; `(0, 0)` is top-left. |
 | `finger_bend` | `dict[str, int]` | One raw ADC value per finger. |
-| `finger_pressure_kPa_pixels` | `dict[str, list[float]]` or `None` | 16 contact pressures per finger; requires calibration and tare/baseline. |
-| `finger_pressure_N_pixels` | `dict[str, list[float]]` or `None` | Matching pixel forces; `None` without calibration or with `pixel_area_mm2=None`. |
+| `finger_pressure_kPa_pixels` | `dict[str, list[float]]` or `None` | One pressure reading in kPa for each of the 16 pixels; requires calibration and tare/baseline. |
+| `finger_pressure_N_pixels` | `dict[str, list[float]]` or `None` | One force reading in N for each of the 16 pixels; `None` without calibration or with `pixel_area_mm2=None`. |
 | `finger_pressure_saturated` | `dict[str, list[bool]]` or `None` | Raw ADC `>=4000`; requires calibration. |
 
 ```python
@@ -108,9 +108,9 @@ CALIBRATION = "calibrations/example_perpixel_pressure.json"
 with GloveReader(PORT, hand="lh", force=CALIBRATION) as glove:
     resting_adc = glove.tare(duration_s=1.0)  # Worn glove, no tactile contact.
     frame = next(glove.stream())
-    print(frame.tactile.finger_pressure_kPa_pixels["thumb"])  # 16 kPa values.
-    print(frame.tactile.finger_pressure_N_pixels["thumb"])    # 16 newton values.
-    print(frame.tactile.finger_pressure_saturated["thumb"])   # 16 flags.
+    print(frame.tactile.finger_pressure_kPa_pixels["thumb"])  # Pressure per pixel, in kPa.
+    print(frame.tactile.finger_pressure_N_pixels["thumb"])    # Force per pixel, in N.
+    print(frame.tactile.finger_pressure_saturated["thumb"])   # Saturation flag per pixel.
 # N = kPa * area_mm2 * 0.001; default area is 22.5 mm².
 # Saturated/table-top values are lower bounds, even when tared pressure is zero.
 ```

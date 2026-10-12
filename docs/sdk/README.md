@@ -44,7 +44,7 @@ from tactile_glove import GloveReader
 
 with GloveReader("/dev/ttyUSB0", hand="lh") as glove:
     frame = next(glove.stream())
-    print(frame.tactile.finger_pressure["index"])  # 16 ADC values.
+    print(frame.tactile.finger_pressure["index"])  # One ADC reading per pixel (16 pixels).
     print(frame.tactile.finger_bend["index"])      # One bend ADC.
     print(frame.imu.euler_deg)                    # Pitch, roll, yaw in degrees.
     print(frame.host_timestamp_ns, frame.device_timestamp_ms)
@@ -61,11 +61,11 @@ Use the supplied file for your physical glove pair. The reference file below bel
 python examples/stream_glove.py --left COM3 --right COM4 --force calibrations/example_perpixel_pressure.json --seconds 30
 ```
 
-| Output | Default |
-|---|---|
-| Pressure | 16 kPa values per finger. |
-| Force | 16 N values per finger, using 22.5 mm² pixels. |
-| Saturation | Matching flags from raw ADC `>=4000`. |
+| Output | Readings per finger | Unit |
+|---|---|---|
+| Pressure | One reading for each of the 16 pixels. | kPa |
+| Force | One reading for each of the 16 pixels. | N |
+| Saturation | One flag for each of the 16 pixels. | Boolean (`raw ADC >=4000`) |
 
 ### Per-pixel newtons
 
