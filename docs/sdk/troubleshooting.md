@@ -16,15 +16,11 @@
 | Symptom | Action |
 |---|---|
 | Wheel will not install | Match CPython 3.13, OS, and x86_64. |
-| Earlier 0.5.0 stays installed | `python -m pip install --force-reinstall PATH_TO_WHEEL` |
 | Port unavailable | Close the GUI/other readers; check Device Manager or Linux permissions. |
 | Wrong hand | Touch one glove; correct `--left`/`--right` or API `hand`. |
 | `TimeoutError` | No valid sample for two seconds; inspect cable/power and reconnect. Examples do not retry automatically. |
 | Calibrated fields are `None` | Supply the matching `--force FILE`; API callers also need `tare()` or `baseline_adc`. |
-| Newton field is `None` | With calibration, use a positive `pixel_area_mm2`; `None` selects pressure only. |
 | Saturation stays true after tare | Flag uses original raw ADC `>=4000`; treat it as a lower bound. |
-| Raw gyro/accel are zero | Observed V01.12 behavior; physical scaling/output remain unverified. Euler angles are degrees. |
-| Viewer fails | Keep `glove_viewer.py` beside `stream_glove.py`; try without `--viewer`. |
 
 ## Linux serial access
 
