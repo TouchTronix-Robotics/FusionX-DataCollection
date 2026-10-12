@@ -58,8 +58,10 @@ Use the supplied file for your physical glove pair. The reference file below bel
 
 ```bash
 # Worn gloves must stay contact-free during the one-second startup tare.
-python examples/stream_glove.py --left COM3 --right COM4 --force calibrations/example_perpixel_pressure.json --seconds 30
+python examples/read_calibrated_glove.py COM3 --hand lh --force calibrations/example_perpixel_pressure.json --seconds 10
 ```
+
+The script prints raw ADC, pressure, force, and saturation for each pixel. `--interval` controls terminal refresh; acquisition continues between updates.
 
 | Output | Readings per finger | Unit |
 |---|---|---|

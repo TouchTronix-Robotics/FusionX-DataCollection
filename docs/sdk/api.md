@@ -165,7 +165,7 @@ except KeyboardInterrupt:
 ```bash
 # Run from the repository root; replace COM3/COM4 with your ports.
 python examples/stream_glove.py --left COM3 --right COM4 --viewer --seconds 30
-python examples/read_one_frame.py COM3 --hand lh --force calibrations/example_perpixel_pressure.json
+python examples/read_calibrated_glove.py COM3 --hand lh --force calibrations/example_perpixel_pressure.json --seconds 10
 python examples/test_glove.py COM3 --hand lh --raw-output glove_raw_bytes.txt
 ```
 
@@ -174,6 +174,7 @@ python examples/test_glove.py COM3 --hand lh --raw-output glove_raw_bytes.txt
 | `stream_glove.py` | One worker per port; prints counts/rate/frame age. `--force FILE` adds startup tare and peak kPa/N; timed streaming begins after tare. |
 | `--viewer` | Raw ADC display at 25 FPS; latest frame only, stale data dims. Keep `glove_viewer.py` beside the script. |
 | `--seconds` / Ctrl+C / window close | Stops workers and closes ports; reader/render errors propagate after cleanup. |
+| `read_calibrated_glove.py` | Terminal test: requires `--hand` and `--force`; tares, then prints all pixel ADC/kPa/N/saturation values. |
 | `read_one_frame.py` | Prints one frame, including calibrated arrays with `--force FILE`. |
 | `test_glove.py` | Counts bytes/frames and saves a hex dump; close other readers first. |
 
