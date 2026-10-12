@@ -58,7 +58,7 @@ Sending the start command restarts the unsigned 32-bit millisecond counter at ze
 | `finger_bend` | `dict[str, int]` | One raw ADC value per named finger. |
 | `finger_pressure_kPa_pixels` | `dict[str, list[float]]` or `None` | Five named lists of 16 calibrated contact pressures in kPa; `None` without calibration. |
 | `finger_pressure_saturated` | `dict[str, list[bool]]` or `None` | Matching saturation flags from original raw ADC `>=4000`; `None` without calibration. |
-| `finger_pressure_N` | `dict[str, list[float]]` or `None` | Matching 16 per-pixel forces in newtons per finger with calibration, using 22.5 mm² by default; `None` without calibration or with `pixel_area_mm2=None`. |
+| `finger_pressure_N_pixels` | `dict[str, list[float]]` or `None` | Matching 16 per-pixel forces in newtons per finger with calibration, using 22.5 mm² by default; `None` without calibration or with `pixel_area_mm2=None`. |
 
 `FINGER_NAMES` is `["thumb", "index", "middle", "ring", "little"]`. `ADC_MAX` is **4096**, and ADC values remain **0–4096**. All 80 pressure and five bend channels are present in the named finger dictionaries. Optional calibrated pixel arrays align with these unchanged raw ADC fields. Bend-angle calibration is not applied.
 
@@ -98,7 +98,7 @@ with GloveReader("COM3", hand="lh", force="calibrations/example_perpixel_pressur
     frame = next(glove.stream())
     print(frame.tactile.finger_pressure_kPa_pixels["thumb"])  # 16 values.
     print(frame.tactile.finger_pressure_saturated["thumb"])
-    print(frame.tactile.finger_pressure_N["thumb"])  # 16 Newton values.
+    print(frame.tactile.finger_pressure_N_pixels["thumb"])  # 16 Newton values.
 ```
 
 With a recent resting measurement, pass `baseline_adc=resting_adc` to enable calibrated output on the first accepted sample. Tare discards buffered input, consumes fresh samples, and leaves the glove counter running. A failed tare invalidates the previous baseline.
@@ -107,7 +107,7 @@ With a recent resting measurement, pass `baseline_adc=resting_adc` to enable cal
 
 The SDK reuses the GUI recorder's lookup preparation and conversion. Decoded patch `[row, col]` uses table `r{col}c{3-row}`. Contact pressure is `max(LUT[live_adc] - LUT[resting_adc], 0)`. Live and resting indices are clamped integers in 0–4095; raw ADC 4096 is preserved in `finger_pressure`. Saturation is based on raw ADC `>=4000`, even when tared pressure is zero. Output retains all 80 pixels without resampling. The guide defines 0–207 kPa calibrated and 207–345 kPa extended; saturated/table-top readings are lower bounds.
 
-The supplied file and current GUI pressure output are in kPa. For these thin-film gloves the confirmed active area is **22.5 mm² per pixel**. The SDK therefore provides `finger_pressure_N` by default with `force` and a resting baseline: `N = kPa × 22.5 × 0.001 = kPa × 0.0225`. All five fingers retain their 16 individual pixel forces.
+The supplied file contains kPa lookup values. Both the GUI recorder and SDK output per-pixel kPa and newtons. For these thin-film gloves the confirmed active area is **22.5 mm² per pixel**. The SDK therefore provides `finger_pressure_N_pixels` by default with `force` and a resting baseline: `N = kPa × 22.5 × 0.001 = kPa × 0.0225`. All five fingers retain their 16 individual pixel forces.
 
 Override `pixel_area_mm2` with another measured uniform area or a five-finger dictionary of 16 areas per finger in decoded patch order. Pass `None` for pressure-only output. Raw ADC values, pressure, saturation flags, and both timestamps remain available.
 

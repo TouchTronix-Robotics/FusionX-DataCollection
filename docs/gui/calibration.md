@@ -44,10 +44,11 @@ Raw ADC values remain in 0–4096; only pressure lookup indices are clamped to 0
 
 Recorded optional fields are:
 
-- `finger_pressure_kPa_pixels`: five arrays of 16 contact-pressure values.
+- `finger_pressure_kPa_pixels`: five arrays of 16 contact-pressure values in kPa.
+- `finger_pressure_N_pixels`: matching per-pixel forces in newtons, using the confirmed 22.5 mm² active area: `N = kPa × 0.0225`.
 - `finger_pressure_saturated`: matching booleans, true when the **original raw ADC is at least 4,000**, even if pressure tare gives zero.
 
-The supplier guide describes 0–207 kPa as calibrated and 207–345 kPa as extended with reduced resolution. Saturated or table-top values represent lower bounds. Pressure LUTs do not supply force in newtons; pixel-area measurements would be needed for that conversion. Do not reuse the older gloves' area constants.
+The supplier guide describes 0–207 kPa as calibrated and 207–345 kPa as extended with reduced resolution. Saturated or table-top values represent lower bounds. The JSON supplies kPa lookup values. The GUI and SDK both retain these pressures and additionally convert each pixel to newtons using 22.5 mm². Both arrays follow decoded patch order, with identical tare and saturation flags.
 
 ## Polynomial force
 

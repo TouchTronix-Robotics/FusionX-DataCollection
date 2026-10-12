@@ -54,7 +54,7 @@ def format_frame(frame: GloveFrame, hand: str | None = None) -> str:
         if calibrated is not None:
             lines[-1] += f" pressure_kPa={calibrated[finger]}"
             lines[-1] += f" saturated={frame.tactile.finger_pressure_saturated[finger]}"
-        forces = frame.tactile.finger_pressure_N
+        forces = frame.tactile.finger_pressure_N_pixels
         if forces is not None:
             lines[-1] += f" force_N={forces[finger]}"
     lines.append(

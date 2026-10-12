@@ -36,7 +36,8 @@ The current wrists have no factory calibration and produce video only. Wrist IMU
 | `bend_raw` | All five original bend wire channels, little → thumb. |
 | `finger_force_N_total` | Optional five polynomial total-force values, in N. |
 | `finger_pressure_kPa_pixels` | Optional five-by-16 calibrated contact pressures, in kPa. |
-| `finger_pressure_saturated` | Matching five-by-16 booleans; present together with per-pixel pressure. |
+| `finger_pressure_N_pixels` | Matching five-by-16 per-pixel forces, in N, computed as `kPa × 0.0225` for 22.5 mm² pixels. |
+| `finger_pressure_saturated` | Matching five-by-16 booleans; present together with per-pixel pressure and force. |
 
 Optional converted fields require matching calibrations. Raw fields remain unchanged. The recorder does not write derived tactile/bend images; Foxglove generates those views during playback.
 

@@ -85,7 +85,7 @@ with GloveReader(
     frame = next(glove.stream())
     print(frame.tactile.finger_pressure_kPa_pixels["index"])  # 16 kPa values.
     print(frame.tactile.finger_pressure_saturated["index"])   # 16 flags.
-    print(frame.tactile.finger_pressure_N["index"])           # 16 Newton values.
+    print(frame.tactile.finger_pressure_N_pixels["index"])           # 16 Newton values.
 ```
 
 The SDK uses the GUI recorder's shared per-pixel conversion. Calibrated arrays align with the 16 decoded `finger_pressure` entries for each finger: patch `[row, col]` uses supplier table `r{col}c{3-row}`. Tare is `max(LUT[live_adc] - LUT[resting_adc], 0)` in pressure. Lookup indices are integer-clamped to 0–4095; original ADC readings of 4096 remain intact. Saturation flags use unmodified raw ADC `>=4000`, including pixels whose tared pressure is zero. Saturated/table-top readings are lower bounds; the supplier specifies 0–207 kPa calibrated and 207–345 kPa extended.
@@ -94,9 +94,9 @@ To use an existing resting measurement, pass `baseline_adc=resting_adc`. It must
 
 ### Per-pixel newtons
 
-The supplied calibration and current GUI pressure output are in kPa. For these thin-film gloves, the confirmed active area is **22.5 mm² per pixel**. The SDK defaults to that area and computes `N = kPa × 22.5 × 0.001 = kPa × 0.0225`. With `--force JSON` or `force=path` and a resting tare, all 80 per-pixel Newton values are available automatically.
+The supplier calibration contains kPa lookup values. Both the GUI recorder and SDK output `finger_pressure_kPa_pixels` and `finger_pressure_N_pixels`. For these thin-film gloves, the confirmed active area is **22.5 mm² per pixel**. The SDK defaults to that area and computes `N = kPa × 22.5 × 0.001 = kPa × 0.0225`. With `--force JSON` or `force=path` and a resting tare, all 80 per-pixel Newton values are available automatically.
 
-The API accepts `pixel_area_mm2=measured_pixel_area_mm2` to override the uniform default, or a dictionary mapping each of the five fingers to 16 positive finite areas in decoded patch order. With calibration and a resting baseline, `frame.tactile.finger_pressure_N["index"]` contains **16 per-pixel forces in newtons**. The pressure and saturation fields remain available. Pass `pixel_area_mm2=None` for pressure-only calibrated output. Raw-only readers have all three calibrated fields set to `None`.
+The API accepts `pixel_area_mm2=measured_pixel_area_mm2` to override the uniform default, or a dictionary mapping each of the five fingers to 16 positive finite areas in decoded patch order. With calibration and a resting baseline, `frame.tactile.finger_pressure_N_pixels["index"]` contains **16 per-pixel forces in newtons**. The pressure and saturation fields remain available. Pass `pixel_area_mm2=None` for pressure-only calibrated output. Raw-only readers have all three calibrated fields set to `None`.
 
 The examples accept a uniform area override through `--pixel-area-mm2 AREA_MM2`; the default is 22.5 mm². `read_one_frame.py` prints all 16 Newton values per finger; streaming status reports each finger's peak pixel force. The calibration JSON itself stays unchanged.
 

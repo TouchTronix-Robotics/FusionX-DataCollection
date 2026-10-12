@@ -165,7 +165,7 @@ class Capture:
                         f"{finger}={max(values):.3f}"
                         for finger, values in pressure.items()
                     )
-                forces = frame.tactile.finger_pressure_N
+                forces = frame.tactile.finger_pressure_N_pixels
                 if forces is not None:
                     parts[-1] += ", peak pixel N: " + ", ".join(
                         f"{finger}={max(values):.3f}"
