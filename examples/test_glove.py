@@ -1,11 +1,10 @@
 import argparse
-import time
 import struct
+import time
 from collections.abc import Sequence
 from pathlib import Path
 
 import serial
-
 from tactile_glove import GloveReader
 
 FRAME_HEADER = bytes.fromhex("aabb")

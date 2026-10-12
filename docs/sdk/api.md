@@ -5,7 +5,10 @@
 The `tactile-glove-sdk` **0.5.0** API exports the `tactile_glove` package. Runtime reader/parser modules are compiled. The examples in this repository use that installed wheel.
 
 ```python
-from tactile_glove import GloveReader, GloveFrame, TactileData, IMUData, FINGER_NAMES, ADC_MAX
+from tactile_glove import (
+    GloveReader, GloveFrame, TactileData, IMUData,
+    FINGER_NAMES, ADC_MAX, DEFAULT_PIXEL_AREA_MM2,
+)
 ```
 
 ## GloveReader
@@ -60,7 +63,7 @@ Sending the start command restarts the unsigned 32-bit millisecond counter at ze
 | `finger_pressure_saturated` | `dict[str, list[bool]]` or `None` | Matching saturation flags from original raw ADC `>=4000`; `None` without calibration. |
 | `finger_pressure_N_pixels` | `dict[str, list[float]]` or `None` | Matching 16 per-pixel forces in newtons per finger with calibration, using 22.5 mm² by default; `None` without calibration or with `pixel_area_mm2=None`. |
 
-`FINGER_NAMES` is `["thumb", "index", "middle", "ring", "little"]`. `ADC_MAX` is **4096**, and ADC values remain **0–4096**. All 80 pressure and five bend channels are present in the named finger dictionaries. Optional calibrated pixel arrays align with these unchanged raw ADC fields. Bend-angle calibration is not applied.
+`FINGER_NAMES` is `["thumb", "index", "middle", "ring", "little"]`. `ADC_MAX` is **4096**, and ADC values remain **0–4096**. `DEFAULT_PIXEL_AREA_MM2` is **22.5**, the shared active-area default used by the GUI, SDK reader, and examples. All 80 pressure and five bend channels are present in the named finger dictionaries. Optional calibrated pixel arrays align with these unchanged raw ADC fields. Bend-angle calibration is not applied.
 
 For named patch `[row, column]`:
 

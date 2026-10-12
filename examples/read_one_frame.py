@@ -2,7 +2,7 @@ import argparse
 import math
 from collections.abc import Sequence
 
-from tactile_glove import FINGER_NAMES, GloveFrame, GloveReader
+from tactile_glove import DEFAULT_PIXEL_AREA_MM2, FINGER_NAMES, GloveFrame, GloveReader
 
 
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
@@ -33,9 +33,9 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser.add_argument(
         "--pixel-area-mm2",
         type=float,
-        default=22.5,
+        default=DEFAULT_PIXEL_AREA_MM2,
         metavar="AREA",
-        help="Active area of each pixel in mm² for --force (default: 22.5)",
+        help=f"Active area of each pixel in mm² for --force (default: {DEFAULT_PIXEL_AREA_MM2})",
     )
     args = parser.parse_args(argv)
     if not math.isfinite(args.pixel_area_mm2) or args.pixel_area_mm2 <= 0:

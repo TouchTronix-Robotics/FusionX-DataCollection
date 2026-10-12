@@ -8,7 +8,7 @@ from collections.abc import Sequence
 from concurrent.futures import ThreadPoolExecutor, as_completed, wait
 from threading import Event, Lock
 
-from tactile_glove import GloveFrame, GloveReader
+from tactile_glove import DEFAULT_PIXEL_AREA_MM2, GloveFrame, GloveReader
 
 
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
@@ -35,9 +35,9 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser.add_argument(
         "--pixel-area-mm2",
         type=float,
-        default=22.5,
+        default=DEFAULT_PIXEL_AREA_MM2,
         metavar="AREA",
-        help="Active area of each pixel in mm² for --force (default: 22.5)",
+        help=f"Active area of each pixel in mm² for --force (default: {DEFAULT_PIXEL_AREA_MM2})",
     )
     parser.add_argument(
         "--viewer", action="store_true", help="Show live tactile heatmaps and bend bars"
@@ -81,10 +81,9 @@ class Capture:
         baudrate: int,
         seconds: float | None,
         force: str | None = None,
-        pixel_area_mm2: float = 22.5,
+        pixel_area_mm2: float = DEFAULT_PIXEL_AREA_MM2,
     ) -> None:
         self.ports = ports
-        self.baudrate = baudrate
         self.seconds = seconds
         self.force = force
         # Validate every selected hand's calibration before opening any port.
@@ -104,7 +103,7 @@ class Capture:
         self.counts: Counter[str] = Counter()
         self.latest: dict[str, GloveFrame] = {}
 
-    def _read_hand(self, hand: str, port: str) -> None:
+    def _read_hand(self, hand: str) -> None:
         if self.stop.is_set():
             return
         with self._readers[hand] as glove:
@@ -129,10 +128,7 @@ class Capture:
         with ThreadPoolExecutor(
             max_workers=len(self.ports), thread_name_prefix="glove-port"
         ) as executor:
-            futures = [
-                executor.submit(self._read_hand, hand, port)
-                for hand, port in self.ports.items()
-            ]
+            futures = [executor.submit(self._read_hand, hand) for hand in self.ports]
             try:
                 for future in as_completed(futures):
                     future.result()

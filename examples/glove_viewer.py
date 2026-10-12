@@ -4,7 +4,7 @@ import signal
 import time
 from concurrent.futures import Future
 
-from tactile_glove import FINGER_NAMES
+from tactile_glove import ADC_MAX, FINGER_NAMES
 
 
 class GloveViewer:
@@ -51,7 +51,7 @@ class GloveViewer:
             tactile.setYRange(0, 4, padding=0)
             tactile.setMouseEnabled(x=False, y=False)
             image = pg.ImageItem(
-                np.full((4, width), np.nan), axisOrder="row-major", levels=(0, 4095)
+                np.full((4, width), np.nan), axisOrder="row-major", levels=(0, ADC_MAX)
             )
             tactile.addItem(image)
             self.images[hand] = image
@@ -68,12 +68,14 @@ class GloveViewer:
                 )
             )
             scale = pg.ColorBarItem(
-                values=(0, 4095), colorMap=pg.colormap.get("viridis"), interactive=False
+                values=(0, ADC_MAX),
+                colorMap=pg.colormap.get("viridis"),
+                interactive=False,
             )
             scale.setImageItem(image)
             scale.getAxis("right").enableAutoSIPrefix(False)
             scale.getAxis("right").setTicks(
-                [[(value, str(value)) for value in (0, 1024, 2048, 3072, 4095)]]
+                [[(value, str(value)) for value in (0, 1024, 2048, 3072, ADC_MAX)]]
             )
             self.window.addItem(scale, row=1, col=0 if hand == "lh" else 3)
             bend = self.window.addPlot(
@@ -82,7 +84,7 @@ class GloveViewer:
             bend.getAxis("left").setWidth(60)
             bend.getAxis("left").enableAutoSIPrefix(False)
             bend.setLabel("left", "Raw ADC")
-            bend.setYRange(0, 4095, padding=0)
+            bend.setYRange(0, ADC_MAX, padding=0)
             bend.setXRange(-0.5, width + 0.5, padding=0)
             bend.setMouseEnabled(x=False, y=False)
             bend.getAxis("bottom").setTicks([ticks])
@@ -94,7 +96,7 @@ class GloveViewer:
             image.setOpacity(0.3)
             bars.setOpacity(0.3)
         self.window.addLabel(
-            "Five fingers · 16 tactile pixels and one bend channel per finger · raw ADC 0–4095",
+            f"Five fingers · 16 tactile pixels and one bend channel per finger · raw ADC 0–{ADC_MAX}",
             row=3,
             col=1,
             colspan=2,
@@ -151,7 +153,7 @@ class GloveViewer:
                 if time.monotonic() - last_report >= 1:
                     print(self.capture.status(), flush=True)
                     last_report = time.monotonic()
-            except Exception as exc:
+            except Exception as exc:  # noqa: BLE001 -- Propagate rendering errors after cleanup.
                 error = exc
                 self.app.quit()
 
