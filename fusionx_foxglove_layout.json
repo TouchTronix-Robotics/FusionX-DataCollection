@@ -1,6 +1,6 @@
 {
   "configById": {
-    "Plot!oakaccl": {
+    "Plot!headaccel": {
       "title": "Head IMU — Acceleration",
       "paths": [
         {
@@ -31,7 +31,7 @@
       "xAxisVal": "timestamp",
       "sidebarDimension": 240
     },
-    "Plot!oakgyro": {
+    "Plot!headgyro": {
       "title": "Head IMU — Gyroscope",
       "paths": [
         {
@@ -62,85 +62,23 @@
       "xAxisVal": "timestamp",
       "sidebarDimension": 240
     },
-    "Plot!wlaccel": {
-      "title": "Wrist LH IMU — Acceleration",
-      "paths": [
-        {
-          "value": "/camera/wrist/lh/imu.accel[0]",
-          "label": "X",
-          "enabled": true,
-          "timestampMethod": "receiveTime"
-        },
-        {
-          "value": "/camera/wrist/lh/imu.accel[1]",
-          "label": "Y",
-          "enabled": true,
-          "timestampMethod": "receiveTime"
-        },
-        {
-          "value": "/camera/wrist/lh/imu.accel[2]",
-          "label": "Z",
-          "enabled": true,
-          "timestampMethod": "receiveTime"
-        }
-      ],
-      "showXAxisLabels": true,
-      "showYAxisLabels": true,
-      "showLegend": true,
-      "legendDisplay": "floating",
-      "showPlotValuesInLegend": true,
-      "isSynced": true,
-      "xAxisVal": "timestamp",
-      "sidebarDimension": 240
-    },
-    "Plot!wraccel": {
-      "title": "Wrist RH IMU — Acceleration",
-      "paths": [
-        {
-          "value": "/camera/wrist/rh/imu.accel[0]",
-          "label": "X",
-          "enabled": true,
-          "timestampMethod": "receiveTime"
-        },
-        {
-          "value": "/camera/wrist/rh/imu.accel[1]",
-          "label": "Y",
-          "enabled": true,
-          "timestampMethod": "receiveTime"
-        },
-        {
-          "value": "/camera/wrist/rh/imu.accel[2]",
-          "label": "Z",
-          "enabled": true,
-          "timestampMethod": "receiveTime"
-        }
-      ],
-      "showXAxisLabels": true,
-      "showYAxisLabels": true,
-      "showLegend": true,
-      "legendDisplay": "floating",
-      "showPlotValuesInLegend": true,
-      "isSynced": true,
-      "xAxisVal": "timestamp",
-      "sidebarDimension": 240
-    },
     "Plot!lhaccel": {
-      "title": "LH IMU — Acceleration",
+      "title": "LH IMU — Acceleration (raw, scaling unverified)",
       "paths": [
         {
-          "value": "/glove/lh/imu.imu_accel[0]",
+          "value": "/glove/lh/imu.imu_accel_raw[0]",
           "label": "X",
           "enabled": true,
           "timestampMethod": "receiveTime"
         },
         {
-          "value": "/glove/lh/imu.imu_accel[1]",
+          "value": "/glove/lh/imu.imu_accel_raw[1]",
           "label": "Y",
           "enabled": true,
           "timestampMethod": "receiveTime"
         },
         {
-          "value": "/glove/lh/imu.imu_accel[2]",
+          "value": "/glove/lh/imu.imu_accel_raw[2]",
           "label": "Z",
           "enabled": true,
           "timestampMethod": "receiveTime"
@@ -156,22 +94,22 @@
       "sidebarDimension": 240
     },
     "Plot!lhgyro1": {
-      "title": "LH IMU — Gyroscope",
+      "title": "LH IMU — Gyroscope (raw, scaling unverified)",
       "paths": [
         {
-          "value": "/glove/lh/imu.imu_gyro[0]",
+          "value": "/glove/lh/imu.imu_gyro_raw[0]",
           "label": "X",
           "enabled": true,
           "timestampMethod": "receiveTime"
         },
         {
-          "value": "/glove/lh/imu.imu_gyro[1]",
+          "value": "/glove/lh/imu.imu_gyro_raw[1]",
           "label": "Y",
           "enabled": true,
           "timestampMethod": "receiveTime"
         },
         {
-          "value": "/glove/lh/imu.imu_gyro[2]",
+          "value": "/glove/lh/imu.imu_gyro_raw[2]",
           "label": "Z",
           "enabled": true,
           "timestampMethod": "receiveTime"
@@ -186,30 +124,24 @@
       "xAxisVal": "timestamp",
       "sidebarDimension": 240
     },
-    "Plot!lhquat1": {
-      "title": "LH IMU — Orientation",
+    "Plot!lheuler": {
+      "title": "LH IMU — Euler angles (degrees, wire convention)",
       "paths": [
         {
-          "value": "/glove/lh/imu.imu_quaternion[0]",
-          "label": "W",
+          "value": "/glove/lh/imu.imu_euler_deg[0]",
+          "label": "Pitch",
           "enabled": true,
           "timestampMethod": "receiveTime"
         },
         {
-          "value": "/glove/lh/imu.imu_quaternion[1]",
-          "label": "X",
+          "value": "/glove/lh/imu.imu_euler_deg[1]",
+          "label": "Roll",
           "enabled": true,
           "timestampMethod": "receiveTime"
         },
         {
-          "value": "/glove/lh/imu.imu_quaternion[2]",
-          "label": "Y",
-          "enabled": true,
-          "timestampMethod": "receiveTime"
-        },
-        {
-          "value": "/glove/lh/imu.imu_quaternion[3]",
-          "label": "Z",
+          "value": "/glove/lh/imu.imu_euler_deg[2]",
+          "label": "Yaw",
           "enabled": true,
           "timestampMethod": "receiveTime"
         }
@@ -224,22 +156,22 @@
       "sidebarDimension": 240
     },
     "Plot!rhaccel": {
-      "title": "RH IMU — Acceleration",
+      "title": "RH IMU — Acceleration (raw, scaling unverified)",
       "paths": [
         {
-          "value": "/glove/rh/imu.imu_accel[0]",
+          "value": "/glove/rh/imu.imu_accel_raw[0]",
           "label": "X",
           "enabled": true,
           "timestampMethod": "receiveTime"
         },
         {
-          "value": "/glove/rh/imu.imu_accel[1]",
+          "value": "/glove/rh/imu.imu_accel_raw[1]",
           "label": "Y",
           "enabled": true,
           "timestampMethod": "receiveTime"
         },
         {
-          "value": "/glove/rh/imu.imu_accel[2]",
+          "value": "/glove/rh/imu.imu_accel_raw[2]",
           "label": "Z",
           "enabled": true,
           "timestampMethod": "receiveTime"
@@ -255,22 +187,22 @@
       "sidebarDimension": 240
     },
     "Plot!rhgyro1": {
-      "title": "RH IMU — Gyroscope",
+      "title": "RH IMU — Gyroscope (raw, scaling unverified)",
       "paths": [
         {
-          "value": "/glove/rh/imu.imu_gyro[0]",
+          "value": "/glove/rh/imu.imu_gyro_raw[0]",
           "label": "X",
           "enabled": true,
           "timestampMethod": "receiveTime"
         },
         {
-          "value": "/glove/rh/imu.imu_gyro[1]",
+          "value": "/glove/rh/imu.imu_gyro_raw[1]",
           "label": "Y",
           "enabled": true,
           "timestampMethod": "receiveTime"
         },
         {
-          "value": "/glove/rh/imu.imu_gyro[2]",
+          "value": "/glove/rh/imu.imu_gyro_raw[2]",
           "label": "Z",
           "enabled": true,
           "timestampMethod": "receiveTime"
@@ -285,30 +217,24 @@
       "xAxisVal": "timestamp",
       "sidebarDimension": 240
     },
-    "Plot!rhquat1": {
-      "title": "RH IMU — Orientation",
+    "Plot!rheuler": {
+      "title": "RH IMU — Euler angles (degrees, wire convention)",
       "paths": [
         {
-          "value": "/glove/rh/imu.imu_quaternion[0]",
-          "label": "W",
+          "value": "/glove/rh/imu.imu_euler_deg[0]",
+          "label": "Pitch",
           "enabled": true,
           "timestampMethod": "receiveTime"
         },
         {
-          "value": "/glove/rh/imu.imu_quaternion[1]",
-          "label": "X",
+          "value": "/glove/rh/imu.imu_euler_deg[1]",
+          "label": "Roll",
           "enabled": true,
           "timestampMethod": "receiveTime"
         },
         {
-          "value": "/glove/rh/imu.imu_quaternion[2]",
-          "label": "Y",
-          "enabled": true,
-          "timestampMethod": "receiveTime"
-        },
-        {
-          "value": "/glove/rh/imu.imu_quaternion[3]",
-          "label": "Z",
+          "value": "/glove/rh/imu.imu_euler_deg[2]",
+          "label": "Yaw",
           "enabled": true,
           "timestampMethod": "receiveTime"
         }
@@ -460,24 +386,16 @@
       "synchronize": false,
       "title": "Wrist RH"
     },
-    "Tab!oakimu1": {
+    "Tab!headimu": {
       "activeTabIdx": 0,
       "tabs": [
         {
           "title": "Acceleration",
-          "layout": "Plot!oakaccl"
+          "layout": "Plot!headaccel"
         },
         {
           "title": "Gyroscope",
-          "layout": "Plot!oakgyro"
-        },
-        {
-          "title": "Wrist LH",
-          "layout": "Plot!wlaccel"
-        },
-        {
-          "title": "Wrist RH",
-          "layout": "Plot!wraccel"
+          "layout": "Plot!headgyro"
         }
       ]
     },
@@ -496,8 +414,8 @@
           "layout": "Plot!lhgyro1"
         },
         {
-          "title": "Orientation",
-          "layout": "Plot!lhquat1"
+          "title": "Euler angles",
+          "layout": "Plot!lheuler"
         }
       ]
     },
@@ -513,8 +431,8 @@
           "layout": "Plot!rhgyro1"
         },
         {
-          "title": "Orientation",
-          "layout": "Plot!rhquat1"
+          "title": "Euler angles",
+          "layout": "Plot!rheuler"
         }
       ]
     }
@@ -539,7 +457,7 @@
     },
     "second": {
       "direction": "row",
-      "first": "Tab!oakimu1",
+      "first": "Tab!headimu",
       "second": {
         "direction": "row",
         "first": "Tab!lhimu01",
