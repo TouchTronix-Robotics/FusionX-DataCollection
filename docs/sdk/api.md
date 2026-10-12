@@ -84,12 +84,6 @@ See the [left](../glove-map-lh.svg) and [right](../glove-map-rh.svg) diagrams. T
 
 Inspected V01.12 samples had populated Euler angles but zero raw gyro/accelerometer values. Preserve those fields without claiming verified rad/s or m/s² for the glove. The firmware does not transmit a quaternion or magnetometer reading.
 
-## API changes in 0.5.0
-
-Public frames omit `message_sequence`, `tactile.pressure_raw`, `tactile.bend_raw`, `tactile.raw_bytes`, and `imu.raw_bytes`. Use the named finger dictionaries for all 85 tactile/bend channels and the glove millisecond counter for sample spacing. The public data types are Python dataclasses in `tactile_glove.reader`; import them through `tactile_glove`. Tactile dictionaries/lists are mutable, while IMU values are tuples.
-
-The SDK supports supplier per-pixel calibration through `force=FILE`, with `tare()` or provided `baseline_adc`. See [per-pixel calibration](README.md#optional-per-pixel-calibration) and [building a custom pipeline](README.md#build-your-own-data-collection-pipeline).
-
 ## Per-pixel calibration
 
 ```python
