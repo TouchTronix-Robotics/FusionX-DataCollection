@@ -64,7 +64,7 @@ Hold each pose through its collection cue. Renew calibration after re-wearing gl
 | **User Calibration** | Current wearer's file from step 2. |
 | **Glove Calibration** | This physical pair's pressure or polynomial force file. |
 
-**Browse** accepts files outside the app folder. `calibrations/example_perpixel_pressure.json` applies only to **LH_1/RH_1**. See [file requirements](calibration.md).
+**Browse** accepts files outside the app folder. The [example calibration](../../calibrations/example_perpixel_pressure.json) applies only to **LH_1/RH_1**. See [file requirements](calibration.md).
 
 ![Calibration selectors](03-calibrations.png)
 

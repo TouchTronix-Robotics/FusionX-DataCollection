@@ -32,7 +32,7 @@ The app generates the complete JSON with a `gloves` wrapper and this required `l
 
 ## Supplier per-pixel pressure
 
-`calibrations/example_perpixel_pressure.json` and its supplier guide apply only to **LH_1/RH_1**. Keep them intact; use the matching hand assignments.
+The [example calibration](../../calibrations/example_perpixel_pressure.json) applies only to **LH_1/RH_1**. Use your own calibration for other gloves.
 
 | File requirement | Value |
 |---|---|

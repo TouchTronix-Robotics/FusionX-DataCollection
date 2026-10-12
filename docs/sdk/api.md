@@ -100,7 +100,7 @@ print(pitch, roll, yaw, imu.gyro_raw, imu.accel_raw)
 
 ## Per-pixel calibration
 
-Use the matching glove-pair file. `calibrations/example_perpixel_pressure.json` belongs to **LH_1/RH_1**.
+Use the [example file](../../calibrations/example_perpixel_pressure.json) for **LH_1/RH_1**; use your own calibration for other gloves.
 
 ```python
 CALIBRATION = "calibrations/example_perpixel_pressure.json"

@@ -54,7 +54,7 @@ See [the API examples](api.md) for every field, polling, and reconnection.
 
 ## Optional per-pixel calibration
 
-Use the supplied file for your physical glove pair. The reference file below belongs to **LH_1/RH_1**.
+The [example file](../../calibrations/example_perpixel_pressure.json) is for **LH_1/RH_1**. Use your own calibration for other gloves. Run from the repository root:
 
 ```bash
 # Worn gloves must stay contact-free during the one-second startup tare.
