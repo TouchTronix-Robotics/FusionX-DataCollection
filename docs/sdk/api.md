@@ -59,8 +59,8 @@ Sending the start command restarts the unsigned 32-bit millisecond counter at ze
 | `finger_pressure` | `dict[str, list[int]]` | Five named 4×4 patches, flattened row-major to 16 entries with `(0, 0)` at the top left. |
 | `finger_bend` | `dict[str, int]` | One raw ADC value per named finger. |
 | `finger_pressure_kPa_pixels` | `dict[str, list[float]]` or `None` | Five named lists of 16 calibrated contact pressures in kPa; `None` without calibration. |
-| `finger_pressure_saturated` | `dict[str, list[bool]]` or `None` | Matching saturation flags from original raw ADC `>=4000`; `None` without calibration. |
 | `finger_pressure_N_pixels` | `dict[str, list[float]]` or `None` | Matching 16 per-pixel forces in newtons per finger with calibration, using 22.5 mm² by default; `None` without calibration or with `pixel_area_mm2=None`. |
+| `finger_pressure_saturated` | `dict[str, list[bool]]` or `None` | Matching saturation flags from original raw ADC `>=4000`; `None` without calibration. |
 
 Finger dictionaries use `"thumb"`, `"index"`, `"middle"`, `"ring"`, and `"little"` in that order. ADC values remain **0–4096**, and the reader's default pixel area is **22.5 mm²**. All 80 pressure and five bend channels are present in the named finger dictionaries. Optional calibrated pixel arrays align with these unchanged raw ADC fields. Bend-angle calibration is not applied. The examples define their display conventions directly; the SDK exports the four classes shown above.
 
