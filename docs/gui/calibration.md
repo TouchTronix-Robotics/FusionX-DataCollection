@@ -27,7 +27,7 @@ Generated files have the `gloves` wrapper, five named fingers, 16 resting ADC va
 }
 ```
 
-Use the app to generate the complete file. Regenerate wearer calibrations saved before the top-left pixel-origin change; files without `pixel_origin: "top_left"` are rejected. The supplier pressure LUT JSON remains usable unchanged. V1/V2 JQ files and earlier four-finger files are rejected. Selecting an existing username/file for recalibration replaces that file deliberately; choose a new name to preserve it.
+Use the app to generate the complete file. Wearer files must use this exact layout; the supplier pressure LUT uses its own schema. Selecting an existing username/file for recalibration replaces that file deliberately; choose a new name to preserve it.
 
 ## Supplier per-pixel pressure
 

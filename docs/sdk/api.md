@@ -104,7 +104,7 @@ with GloveReader("COM3", hand="lh", force="calibrations/example_perpixel_pressur
     print(frame.tactile.finger_pressure_N_pixels["thumb"])  # 16 Newton values.
 ```
 
-With a recent resting measurement, pass `baseline_adc=resting_adc` to enable calibrated output on the first accepted sample. Resting measurements must use top-left row-major order; take a fresh tare if they were captured with the former bottom-origin order. Tare discards buffered input, consumes fresh samples, and leaves the glove counter running. A failed tare invalidates the previous baseline.
+With a recent resting measurement, pass `baseline_adc=resting_adc` to enable calibrated output on the first accepted sample. Resting measurements use top-left row-major order. Tare discards buffered input, consumes fresh samples, and leaves the glove counter running. A failed tare invalidates the previous baseline.
 
 `force` accepts the supplier JSON with exactly `lh` and `rh`, all five fingers in each hand, and exactly 16 raw pixel keys `r0c0`–`r3c3` per finger. Each table contains 4096 finite nonnegative kPa values, starts at zero, and never decreases. No metadata is required. This file belongs to physical gloves LH_1/RH_1; supply their matching hand assignments. Malformed tables and polynomial calibration files are rejected before a port opens.
 
