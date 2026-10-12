@@ -12,7 +12,7 @@
 | Serial connection | 1,000,000 baud, 8N1 |
 | Hand assignment | One caller-assigned `lh` or `rh` per selected port |
 
-Request a validated SDK 0.5.0 wheel from TouchTronix for your Python interpreter and platform. Wheels are supplied privately and are not committed on this branch. Earlier wheel build results predate the current 0.5.0 API update. Package installation and the examples do not require a compiler or the private application source repository.
+Download SDK 0.5.0 from the [v3.0.0 release](https://github.com/TouchTronix-Robotics/FusionX-DataCollection/releases/tag/v3.0.0), selecting the Windows or Linux wheel for 64-bit CPython 3.13. These wheels are built and tested on GitHub-hosted runners. Package installation and the examples do not require a compiler or the private application source repository.
 
 ## SDK wheel will not install
 

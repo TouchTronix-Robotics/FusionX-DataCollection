@@ -4,7 +4,7 @@
 
 ## Packages and compatibility
 
-Use the V3 thin-film GUI package for V01.12 gloves with five 4×4 patches and five bend channels. Windows packages are x86_64 ZIPs; Linux packages are x86_64 AppImages. The GUI includes its Python runtime and dependencies. Obtain the package and license key from TouchTronix, and select releases explicitly intended for this glove configuration.
+Use the [v3.0.0 GUI package](https://github.com/TouchTronix-Robotics/FusionX-DataCollection/releases/tag/v3.0.0) for V01.12 gloves with five 4×4 patches and five bend channels. Windows packages are x86_64 ZIPs; Linux packages are x86_64 AppImages. The GUI includes its Python runtime and dependencies. Obtain a license key from TouchTronix.
 
 The application records MCAP profile `touchtronix.raw.v4`. It requires the supported Arducam head stereo camera for recording; zero, one, or two assigned wrist cameras are supported. Standalone Foxglove viewer assets are supplied with the matching application package or separately by TouchTronix.
 

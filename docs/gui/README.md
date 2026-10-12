@@ -11,7 +11,7 @@ The GUI package includes its Python runtime. Start here if you want the complete
 
 ## Before you start
 
-Obtain the **V3 thin-film GUI package**, license key, and matching glove-pair calibration from TouchTronix. Public application releases, when published, are listed under [Releases](https://github.com/TouchTronix-Robotics/FusionX-DataCollection/releases); choose a package explicitly intended for this configuration. The V2 v2.2.0 application is for the older glove configuration. This documentation branch does not install the recording application.
+Download the **V3 thin-film GUI v3.0.0** package: [Windows x86_64 ZIP](https://github.com/TouchTronix-Robotics/FusionX-DataCollection/releases/download/v3.0.0/touchtronix-fusionX-v3.0.0-windows-x86_64.zip) or [Linux x86_64 AppImage](https://github.com/TouchTronix-Robotics/FusionX-DataCollection/releases/download/v3.0.0/touchtronix-fusionX-v3.0.0-linux-x86_64.AppImage). Obtain a license key and matching glove-pair calibration from TouchTronix. The [v3.0.0 release](https://github.com/TouchTronix-Robotics/FusionX-DataCollection/releases/tag/v3.0.0) is intended for this configuration.
 
 - **Windows:** extract the entire ZIP, then open `touchtronix-fusionX.exe`. Keep `_internal/` beside it.
 - **Linux:** use a desktop with FUSE 3, mark the AppImage executable, and launch it as your normal user. It includes its Python runtime and application dependencies.
@@ -19,11 +19,11 @@ Obtain the **V3 thin-film GUI package**, license key, and matching glove-pair ca
 - Connect optional wrist cameras before launching. Assign one wrist to LH or RH, or assign both; two wrists are not required.
 - Create a destination folder on persistent storage with enough space for video.
 
-Example Linux launch; replace `<version>` with the version of the package supplied to you:
+Linux launch:
 
 ```bash
-chmod +x touchtronix-fusionX-<version>-linux-x86_64.AppImage
-./touchtronix-fusionX-<version>-linux-x86_64.AppImage
+chmod +x touchtronix-fusionX-v3.0.0-linux-x86_64.AppImage
+./touchtronix-fusionX-v3.0.0-linux-x86_64.AppImage
 ```
 
 The default `dataset/` and `calibrations/` folders live beside the application or AppImage. **Save Folder** and **Browse** select other locations. Enter your license key when prompted; activation is stored under `~/.config/touchtronix/license.json`.

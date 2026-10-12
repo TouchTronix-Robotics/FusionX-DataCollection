@@ -2,6 +2,17 @@
 
 Documentation for **V3 thin-film gloves**, firmware **V01.12**, on branch **`v3-thimfilm`**. Each glove has five 4×4 tactile patches and five bend channels. Choose the guide for how you want to collect data.
 
+## Download v3.0.0
+
+[Release notes and all downloads](https://github.com/TouchTronix-Robotics/FusionX-DataCollection/releases/tag/v3.0.0)
+
+| Package | Windows x86_64 | Linux x86_64 |
+|---|---|---|
+| FusionX GUI, with Python runtime | [Windows ZIP](https://github.com/TouchTronix-Robotics/FusionX-DataCollection/releases/download/v3.0.0/touchtronix-fusionX-v3.0.0-windows-x86_64.zip) | [Linux AppImage](https://github.com/TouchTronix-Robotics/FusionX-DataCollection/releases/download/v3.0.0/touchtronix-fusionX-v3.0.0-linux-x86_64.AppImage) |
+| Glove SDK 0.5.0, for CPython 3.13 | [Windows wheel](https://github.com/TouchTronix-Robotics/FusionX-DataCollection/releases/download/v3.0.0/tactile_glove_sdk-0.5.0-cp313-cp313-win_amd64.whl) | [Linux wheel](https://github.com/TouchTronix-Robotics/FusionX-DataCollection/releases/download/v3.0.0/tactile_glove_sdk-0.5.0-cp313-cp313-linux_x86_64.whl) |
+
+The GUI requires a TouchTronix license and the supported Arducam head camera for recording. The SDK works independently with your own Python 3.13 environment. Obtain the matching glove-pair calibration from TouchTronix for calibrated pressure/force output.
+
 ## Choose your workflow
 
 | Guide | For | What you collect / control |
@@ -11,7 +22,7 @@ Documentation for **V3 thin-film gloves**, firmware **V01.12**, on branch **`v3-
 
 ### Full FusionX GUI
 
-Obtain the matching GUI package, license key, and glove-pair calibration from TouchTronix. The Windows ZIP or Linux AppImage includes its Python runtime. Recording requires the supported Arducam head stereo camera; zero, one, or two wrist cameras can be assigned.
+Download the GUI package above and obtain a license key and glove-pair calibration from TouchTronix. The Windows ZIP or Linux AppImage includes its Python runtime. Recording requires the supported Arducam head stereo camera; zero, one, or two wrist cameras can be assigned.
 
 - [Installation and recording walkthrough](docs/gui/README.md)
 - [Wearer and glove-pair calibration](docs/gui/calibration.md)
@@ -20,7 +31,7 @@ Obtain the matching GUI package, license key, and glove-pair calibration from To
 
 ### Standalone glove SDK
 
-Obtain a validated **`tactile-glove-sdk` 0.5.0** wheel for **CPython 3.13**, Windows x86_64 or Linux x86_64. The public package is `tactile_glove`; assign one reader to each glove port. The SDK can be used independently of the FusionX GUI and cameras.
+Download the **`tactile-glove-sdk` 0.5.0** wheel above for **CPython 3.13**, Windows x86_64 or Linux x86_64. The public package is `tactile_glove`; assign one reader to each glove port. The SDK can be used independently of the FusionX GUI and cameras.
 
 - [Installation, examples, and a custom collection pipeline](docs/sdk/README.md)
 - [Complete Python API](docs/sdk/api.md)
@@ -28,7 +39,7 @@ Obtain a validated **`tactile-glove-sdk` 0.5.0** wheel for **CPython 3.13**, Win
 - [SDK installation, serial access, and timing troubleshooting](docs/sdk/troubleshooting.md)
 - [Example scripts](examples/)
 
-This repository supplies documentation, examples, and diagrams. SDK wheels are supplied privately; standalone Foxglove extension/layout assets are supplied with the matching GUI package or separately by TouchTronix.
+This branch contains documentation, examples, and diagrams; GUI packages and SDK wheels are attached to the release. Foxglove extension/layout assets are included inside the matching GUI packages.
 
 ## Daily use and maintenance
 
