@@ -1,22 +1,23 @@
 # FusionX-DataCollection
 
-Multimodal data collection tools for synchronized OAK-D stereo video and tactile glove streams.
+Multimodal data collection tools for synchronized Arducam AR0234 stereo video and v1 conductive-fabric tactile gloves. The head stereo camera is required; wrist cameras and gloves are optional.
 
-Download standalone app assets from the [Releases](https://github.com/TouchTronix-Robotics/FusionX-DataCollection/releases) page. Each platform now has one unified FusionX GUI application rather than separate desktop and miniPC builds. The same application opens as a fullscreen touch interface by default; launch it with `--windowed` for desktop use. A separate headless CLI recorder is also available. Python SDK wheel packages are provided separately on request.
+Download the [v1.3.1 release](https://github.com/TouchTronix-Robotics/FusionX-DataCollection/releases/tag/v1.3.1) for the Windows x86_64 GUI and the standalone SDK 0.1.0 wheels for CPython 3.12 on Windows/Linux x86_64.
 
-Standalone Foxglove Desktop viewer files are available directly from this repository:
+The Windows GUI requires an enabled Intel integrated GPU with a current graphics driver for Quick Sync MJPEG decoding and H.264 encoding. Extract the entire GUI ZIP and keep `_internal/` beside `touchtronix-fusionX.exe`. The app opens fullscreen; use `--windowed` for a desktop window.
 
-- [`touchtronixrobotics.fusionx-tactile-panel-0.2.3.foxe`](touchtronixrobotics.fusionx-tactile-panel-0.2.3.foxe) — self-contained FusionX tactile panel extension.
-- [`fusionx_foxglove_layout.json`](fusionx_foxglove_layout.json) — camera, tactile, OAK IMU, and LH/RH glove IMU workspace.
+Camera preview starts automatically after camera discovery, head-IMU warm-up, and QSV validation. **Start Preview / Stop Preview** toggles visualization while idle or recording. Select **Language → English / 中文** for offline interface text and miniaudio voice cues. **Open Logs / 打开日志** opens the diagnostics directory.
 
-Install the extension before importing the layout. Neither file requires the application source tree, Node.js, or npm.
+For current recordings, use the Foxglove layout and packaged tactile extension from the GUI ZIP's `foxglove/` folder. Install the extension before importing the layout. Neither file requires the application source tree, Node.js, or npm. The older standalone [panel 0.2.3](touchtronixrobotics.fusionx-tactile-panel-0.2.3.foxe) and [layout](fusionx_foxglove_layout.json) remain in this branch for earlier recordings.
 
 Choose the instructions for the package you are using:
 
-- [Standalone app README](README-standalone-app.md) — unified fullscreen/windowed GUI, CLI recording, Foxglove playback, one-time Ubuntu miniPC setup, and offline post-processing.
-- [Python SDK README](README-sdk.md) — install a provided `tactile_glove` wheel package and read tactile glove data directly from Python.
+- [Standalone app README](README-standalone-app.md) — Windows setup, automatic preview, calibration, recording, voice cues, and Foxglove playback. Earlier OAK/Linux tools are labeled as legacy.
+- [Python SDK README](README-sdk.md) — install the `tactile_glove` wheel package and read tactile glove data directly from Python.
 
 ## Test Cameras
+
+Close the GUI before running these independent hardware diagnostics. Their test-specific head/wrist IMU polling is separate from the current GUI, which records only head-camera IMU data.
 
 The camera/IMU tests use OpenCV and the Arducam SDK. From the repository root, install their dependencies into your Python environment:
 

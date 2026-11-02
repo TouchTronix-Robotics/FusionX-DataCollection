@@ -1,38 +1,38 @@
 # FusionX-DataCollection Standalone App
 
-Use the standalone app releases when you want a ready-to-run recording GUI, Foxglove playback workspace, or offline post-processing utility.
-
-Download pre-built assets from the [Releases](https://github.com/TouchTronix-Robotics/FusionX-DataCollection/releases) page.
+Use the **v1.3.1 Windows GUI** for recording with v1 conductive-fabric gloves and Arducam AR0234 cameras. Download it from the [v1.3.1 release](https://github.com/TouchTronix-Robotics/FusionX-DataCollection/releases/tag/v1.3.1).
 
 ## Release assets
 
-- **Linux GUI**: `touchtronix-fusionX-VERSION-linux-x86_64.AppImage` — unified fullscreen touch GUI; pass `--windowed` for desktop use
-- **Linux CLI recorder**: `touchtronix-fusionX-cli-VERSION-linux-x86_64.AppImage` — terminal recording
-- **Windows GUI**: `touchtronix-fusionX-VERSION-windows-x86_64.exe` — unified fullscreen touch GUI; pass `--windowed` for desktop use
-- **Windows CLI recorder**: `touchtronix-fusionX-cli-VERSION-windows-x86_64.exe` — terminal recording
+- **Windows GUI:** `touchtronix-fusionX-v1.3.1-windows-x86_64.zip`. Extract the entire ZIP and keep all files together.
+- **Windows SDK:** `tactile_glove_sdk-0.1.0-cp312-cp312-win_amd64.whl`.
+- **Linux SDK:** `tactile_glove_sdk-0.1.0-cp312-cp312-linux_x86_64.whl`.
 
-Replace `VERSION` with the downloaded release version.
+The standalone GUI includes its own Python runtime. The separate SDK wheels require 64-bit CPython 3.12; see the [SDK README](README-sdk.md). The refreshed release includes a Windows GUI ZIP; the Linux AppImage and packaged headless CLI instructions below apply to older releases.
 
-A valid license key is required on first launch.
+A valid license key is required on first launch. The Windows GUI requires an enabled Intel integrated GPU and current Intel graphics driver. It validates Quick Sync MJPEG decoding and H.264 encoding before camera preview or recording can start.
 
 ## Foxglove viewer downloads
 
-Current viewer files are tracked directly in this repository rather than bundled into the application release archives:
+Use the viewer files included in the extracted GUI folder's `foxglove/` subfolder:
 
-- [`touchtronixrobotics.fusionx-tactile-panel-0.2.3.foxe`](touchtronixrobotics.fusionx-tactile-panel-0.2.3.foxe) — self-contained **FusionX Tactile** panel extension.
-- [`fusionx_foxglove_layout.json`](fusionx_foxglove_layout.json) — canonical camera, tactile, OAK IMU, and separate LH/RH glove IMU workspace.
+- `touchtronixrobotics.fusionx-tactile-panel-0.2.4.foxe` — self-contained **FusionX Tactile** panel extension.
+- `fusionx_foxglove_layout.json` — head/wrist camera, tactile, head-camera IMU, and LH/RH glove IMU workspace.
 
-To view a current `touchtronix.raw.v2` recording:
+To view a current `touchtronix.raw.v4` recording:
 
 1. Install [Foxglove Desktop](https://foxglove.dev/download).
-2. Download both files above. On each GitHub file page, select **Download raw file**.
-3. Open or drag the `.foxe` file into Foxglove Desktop, then reload Foxglove. Local extension installation may require a Foxglove developer seat.
-4. Import `fusionx_foxglove_layout.json` from the Foxglove layout menu. Install the extension first so the custom tactile panel resolves correctly.
-5. Open any `recording_*.mcap` segment.
+2. Open or drag the bundled `.foxe` file into Foxglove Desktop, then reload Foxglove. Local extension installation may require a Foxglove developer seat.
+3. Import the bundled `fusionx_foxglove_layout.json` from the Foxglove layout menu. Install the extension first so the custom tactile panel resolves correctly.
+4. Open any `recording_*.mcap` segment.
 
-The tactile panel displays both gloves simultaneously from `/glove/lh/tactile` and `/glove/rh/tactile`. It supports raw tactile, raw bend, total finger force, and per-pixel force views when corresponding fields exist in the recording. The package needs no source checkout, Node.js, or npm.
+The tactile panel displays both gloves simultaneously from `/glove/lh/tactile` and `/glove/rh/tactile`. It has **Raw ADC** and **Pixel Force** modes with aligned bend bars. Pixel Force requires calibrated per-pixel force fields in the recording. The package needs no source checkout, Node.js, or npm.
 
-## Linux setup
+The older standalone [panel 0.2.3](touchtronixrobotics.fusionx-tactile-panel-0.2.3.foxe) and [layout](fusionx_foxglove_layout.json) remain in this branch for earlier recordings. Use the files bundled with the refreshed app for its current Arducam recordings.
+
+## Legacy Linux setup
+
+The following OAK/AppImage setup applies to earlier Linux releases. It is separate from the refreshed Windows v1.3.1 GUI.
 
 ### OAK camera USB permissions
 
@@ -85,20 +85,38 @@ sudo apt install libfuse2
 
 ## Windows setup
 
-Run `touchtronix-fusionX-VERSION-windows-x86_64.exe` directly after replacing `VERSION` with the downloaded release version. It opens fullscreen by default; pass `--windowed` for desktop use. OAK runtime dependencies are bundled.
+Extract `touchtronix-fusionX-v1.3.1-windows-x86_64.zip` and open the extracted `touchtronix-fusionX-v1.3.1-windows-x86_64` folder. Run `touchtronix-fusionX.exe` from that folder. Keep `_internal/` beside the executable; the `foxglove/` folder contains the viewer files.
+
+The app opens fullscreen by default. To use a desktop window, run this from the extracted folder in PowerShell:
+
+```powershell
+.\touchtronix-fusionX.exe --windowed
+```
 
 If the wireless glove dongle is not detected, install the [CH340 USB-serial driver](https://www.wch-ic.com/downloads/CH341SER_EXE.html).
 
 ## Using the app
 
-1. **Calibration tab** — select LH/RH glove serial ports, enter a username, click **Start Calibration**, and follow the on-screen prompts. The profile is saved under `~/Touchtronix/calibrations/<user>.json` when using the recommended AppImage layout.
-2. **Recording tab** — select serial ports, pick an output directory and episode name, and optionally load user and glove force/pressure calibration files.
-3. Choose **Live View** before starting preview. It defaults off to reduce processor load and remains locked for that preview/recording session; it affects visualization only, not recorded sensor rates.
-4. Click **Start Preview** → **Start Recording**, then press **Stop Recording** to save. If an external keyboard is connected, the space bar also starts and stops recording.
+1. Connect the head stereo camera before launching. Wait for camera discovery, head-camera IMU/flash preparation, and QSV validation to finish. Head-IMU startup commonly takes 15–30 seconds. Camera preview then starts automatically while idle; it creates no recording files and keeps head-IMU polling paused.
+2. Select **LH / RH** glove serial ports. Each selected glove appears in the idle tactile/bend preview so you can verify the hand assignment. If wrist cameras are connected, use **Assign Wrists** to select LEFT/RIGHT from live thumbnails. Only assigned wrist cameras appear in preview and recording. The current assignment dialog maps the two wrist cameras as a pair; leave wrists unassigned for head-only capture. Reuse the same physical USB ports, and restart the app after changing the connected camera set or ports.
+3. Click **Calibrate**, enter the wearer name, and follow the OPEN/FIST instructions. User profiles are saved in the app's `calibrations/` directory. Use **Browse** beside the user/glove calibration selectors to load existing JSON files from another folder. Idle camera and glove readers release their devices for calibration, then resume afterward when preview is enabled.
+4. Use **Save Folder** to select the exact pre-generated destination folder. The app writes numbered `recording_###.mcap` segments directly into it and starts at the first unused index on later recordings.
+5. Click **Start Record / Stop Record**, or press **Space** to start and stop capture. Space does not trigger recording while editing text or working in a child dialog.
+6. Use **Start Preview / Stop Preview** while idle or recording. The preview preference is retained across recordings, calibration, and wrist assignment. Visualization does not change recorded sensor rates.
 
-Recordings are written as segmented MCAP raw capture files. Open them directly in Foxglove using the viewer files above. Use the standalone MCAP exporter below only when per-frame image folders, Parquet sensor logs, or calibration JSON files are needed for offline analysis.
+The head camera records intact 3840×1200 side-by-side H.264; each assigned wrist records 1920×1080 H.264. Only the head camera supplies camera IMU samples. Recordings use segmented `touchtronix.raw.v4` MCAP files and open directly in Foxglove with the bundled viewer files.
 
-## Headless CLI recording
+## Voice cues and logs
+
+Choose **Language → English / 中文** to switch interface text and voice prompts together. The app remembers the choice. Bundled English/Chinese WAVs play offline through miniaudio for calibration, recording announcements, and beeps. One shared output device handles the cues; decoding/playback runs separately from sensor acquisition. Audio failures are logged and recovered independently of recording.
+
+Click **Open Logs / 打开日志** to open the diagnostics folder. If a cue goes silent, click **Open Logs before restarting** to mark the issue time, then stop recording and close the app normally. Share the newest `fusionx-*.jsonl` file and any matching `.jsonl.1`, `.2`, or `.3` backups. Logs normally live in `logs/` beside the app; an unwritable location falls back to the current user's local application-data or temporary directory.
+
+Diagnostics include the build revision, audio backend/cue/recovery state, and read-only Windows endpoint/session checks. Digital peaks do not confirm acoustic speaker output. Microphone audio, sensor samples, typed text, and license keys are not intentionally collected.
+
+## Legacy packaged headless CLI recording
+
+The following commands refer to packaged CLI assets from earlier releases. The refreshed v1.3.1 release does not include a CLI executable.
 
 The CLI release asset records directly from a terminal and writes the same dataset format as the GUI. A valid license must already be installed; launch the GUI once to enter the license key before using the CLI.
 
@@ -139,7 +157,9 @@ Common options:
 
 The CLI is always headless and begins recording immediately. An OAK camera is required; startup stops with an error when no camera is detected. Use `Ctrl+C` to stop and save.
 
-## Standalone post-processing
+## Legacy standalone post-processing
+
+The retained exporter below targets earlier OAK `touchtronix.raw.v2` recordings. It is separate from the refreshed Arducam H.264 `touchtronix.raw.v4` pipeline; open current recordings directly in Foxglove with the bundled viewer files.
 
 Recorded episodes contain one or more independently playable `recording_*.mcap` files. Foxglove opens these files directly, so no preview-video conversion step is needed. Install the tactile extension and layout from the [Foxglove viewer downloads](#foxglove-viewer-downloads) section before viewing recordings.
 
@@ -172,7 +192,9 @@ The MCAP exporter reconstructs:
 
 Dependencies: Python 3.10+, `mcap`, `protobuf`, `numpy`, and `pyarrow`. No OAK camera, DepthAI, PySide, serial, FFmpeg, or license dependencies are required for offline export.
 
-## One-time miniPC configuration
+## Legacy one-time miniPC configuration
+
+This Ubuntu/GNOME helper is retained for earlier Linux deployments and is separate from the current Windows GUI.
 
 The repository includes `setup-miniPC-ubuntu.sh` for Ubuntu/GNOME miniPC touchscreen deployments. Run it once as the logged-in desktop user after the touchscreen is connected:
 
