@@ -27,6 +27,8 @@ chmod +x touchtronix-fusionX-v3.0.0-linux-x86_64.AppImage
 
 Enter your license when prompted. The screenshots below use simulated readings.
 
+Choose **Language → English / 中文** to switch interface text and voice cues together; the app remembers the choice. Both GUI packages include miniaudio and the offline WAV prompts and beeps. Recording cues announce collection start/stop. If a cue goes silent, click **Open Logs / 打开日志 before restarting**; see [audio diagnostics](troubleshooting.md#audio-prompts-and-diagnostic-logs).
+
 ## 1. Select the left and right glove ports
 
 | Hand | Linux example | Windows example |

@@ -21,6 +21,17 @@ Use [v3.0.0](https://github.com/TouchTronix-Robotics/FusionX-DataCollection/rele
 | Port access denied | Close other readers; check Linux serial group or Windows driver/COM port. |
 | Slow preview | **Stop Preview** reduces display work while recording continues. |
 | Reader still closing | Wait and retry; do not open the same port elsewhere. |
+| Voice cue goes silent | Check system output/volume, then click **Open Logs / 打开日志 before restarting** to mark the issue; see [audio diagnostics](#audio-prompts-and-diagnostic-logs). |
+
+## Audio prompts and diagnostic logs
+
+Windows and Linux GUI packages include miniaudio and the original English/Chinese WAV cues and beeps. Choose **Language → English / 中文** in the app. No separate audio installation or speech service is needed for the GUI.
+
+If a cue goes silent, click **Open Logs / 打开日志 before restarting**. This opens the automatic log directory and marks the issue time. If practical, try one mouse-controlled start/stop in the same session. Stop recording and close the app normally, then send the newest `fusionx-*.jsonl` file to TouchTronix. Include matching `.jsonl.1`, `.2`, or `.3` backups if present.
+
+Logs normally live in `logs/` beside the application; an unwritable location falls back to the current user's local application-data or temporary directory. No terminal commands or administrator access are needed to collect them.
+
+Diagnostics include build/device details, Space/media-key events, recording state, audio queue/recovery events, and Windows digital audio levels. They do not intentionally collect typed text, microphone/PCM audio, video, glove samples, or license keys. Digital levels cannot confirm physical speaker audibility.
 
 ## Foxglove panel or layout is missing
 

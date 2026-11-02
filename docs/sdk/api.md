@@ -2,10 +2,10 @@
 
 [SDK guide](README.md) · [Sensor indexing](sensors.md) · [Troubleshooting](troubleshooting.md)
 
-SDK **0.5.0** exports four classes:
+SDK **0.6.0** exports four data/reader classes and the terminal calibration function:
 
 ```python
-from tactile_glove import GloveReader, GloveFrame, TactileData, IMUData
+from tactile_glove import GloveReader, GloveFrame, TactileData, IMUData, calibrate
 ```
 
 ## GloveReader
@@ -98,6 +98,72 @@ print(pitch, roll, yaw, imu.gyro_raw, imu.accel_raw)
 # Inspected gyro/accel values were zero. No quaternion or magnetometer is transmitted.
 ```
 
+## Wearer calibration
+
+`calibrate()` reuses the GUI's OPEN/FIST wearer-calibration routine without importing Qt, cameras, or the recorder. It owns the selected ports while running; stop any other readers using them first.
+
+```python
+def calibrate(
+    glove_ports,
+    user,
+    output=None,
+    *,
+    audio=True,
+    language="en",
+    baudrate=1_000_000,
+    hold_seconds=3.0,
+    log=print,
+    stop_event=None,
+): ...
+```
+
+| Argument | Meaning |
+|---|---|
+| `glove_ports` | Mapping of `"lh"` and/or `"rh"` to distinct serial-port strings. One glove works. |
+| `user` | Nonempty wearer name saved in the result. |
+| `output` | Optional string/`PathLike` JSON destination. Success replaces the file; failure/cancellation preserves an existing file. Omit for an in-memory result only. |
+| `audio` | `True` by default: play miniaudio cues when available, with terminal-text fallback. `False` selects silence. |
+| `language` | `"en"` or `"cn"` voice assets. Terminal instructions are English. |
+| `baudrate` | Positive integer; default `1_000_000`. |
+| `hold_seconds` | Finite positive collection duration per pose; default `3.0`. |
+| `log` | Text callback; default `print`. |
+| `stop_event` | Optional `threading.Event` for cancellation. |
+
+```python
+wearer = calibrate(
+    {"lh": "COM3", "rh": "COM4"}, user="operator", output="operator.json",
+    language="en",  # "cn" selects Chinese voice cues.
+)
+resting_adc = wearer["gloves"]["lh"]["tactile_zero_finger"]
+```
+
+The return value is a JSON-compatible dictionary with top-level `layout`, `user`, `timestamp`, and `gloves` keys. It uses the GUI's current V01.12 layout. Each selected hand contains:
+
+- `tactile_zero_finger`: five named lists of 16 resting ADC medians from the last second of the OPEN collection, including fractional baselines.
+- `bend_min` / `bend_max`: mean OPEN/FIST bend endpoints for all five fingers.
+- `pose_samples`: OPEN tactile/bend samples and FIST bend samples, retaining host/device timing and raw bend channels. FIST pressure and glove IMU are not saved.
+- `quality`: frame counts, bend deltas, and tactile-baseline quality information.
+
+The minimum valid-frame check and tactile-baseline warning match the GUI. Zero, unchanged, small, or decreasing bend readings are preserved without bend acceptance criteria. Ports and audio output are cleaned up on success, read errors, Ctrl+C, or programmatic cancellation. Insufficient valid frames or cancellation raises `RuntimeError`; serial/time-out errors propagate after cleanup. Audio errors are reported independently and do not discard valid calibration data.
+
+All SDK wheels include the GUI's original English/Chinese WAV cues and beeps. The optional `audio` extra installs miniaudio; headless calibration still works without that binding or any GUI libraries. See [audio installation](README.md#optional-viewer-and-audio).
+
+Load a saved wearer JSON and reuse its resting ADC with the matching supplier LUT:
+
+```python
+import json
+
+with open("operator.json", encoding="utf-8") as source:
+    wearer = json.load(source)
+with GloveReader(
+    PORT, hand="lh", force="calibrations/example_perpixel_pressure.json",
+    baseline_adc=wearer["gloves"]["lh"]["tactile_zero_finger"],
+) as glove:
+    frame = next(glove.stream())
+```
+
+Wearer calibration does not generate the supplier pressure LUT. Keep the worn glove contact-free during OPEN collection, use the correct hand/pair file, and renew the baseline after a wearer/session change or putting the glove on again. Raw SDK samples and both clocks are preserved.
+
 ## Per-pixel calibration
 
 Use the [example file](../../calibrations/example_perpixel_pressure.json) for **LH_1/RH_1**; use your own calibration for other gloves.
@@ -157,8 +223,8 @@ except KeyboardInterrupt:
 |---|---|
 | `TimeoutError` | No valid sample for two seconds. Metadata/malformed packets do not reset the timeout. |
 | `SerialException` | Connection, permissions, or another reader using the port. |
-| `RuntimeError` | Connect before reading; with calibration, provide a baseline or call `tare()`. `tare()` requires `force`. |
-| `ValueError` | Hand, calibration, baseline, area, or tare duration. |
+| `RuntimeError` | Connect before reading; with pressure calibration, provide a baseline or call `tare()`. `tare()` requires `force`. Wearer calibration also uses this error for insufficient valid frames or cancellation. |
+| `ValueError` | Hand, calibration, baseline, area, tare duration, or wearer-calibration arguments. |
 
 ## Example behavior
 
@@ -166,6 +232,7 @@ except KeyboardInterrupt:
 # Run from the repository root; replace COM3/COM4 with your ports.
 python examples/stream_glove.py --left COM3 --right COM4 --viewer --seconds 30
 python examples/read_calibrated_glove.py COM3 --hand lh --force calibrations/example_perpixel_pressure.json --seconds 10
+python examples/calibrate_gloves.py --left COM3 --right COM4 --user operator --output operator.json
 python examples/test_glove.py COM3 --hand lh --raw-output glove_raw_bytes.txt
 ```
 
@@ -175,6 +242,7 @@ python examples/test_glove.py COM3 --hand lh --raw-output glove_raw_bytes.txt
 | `--viewer` | Raw ADC display at 25 FPS; latest frame only, stale data dims. Keep `glove_viewer.py` beside the script. |
 | `--seconds` / Ctrl+C / window close | Stops workers and closes ports; reader/render errors propagate after cleanup. |
 | `read_calibrated_glove.py` | Terminal test: requires `--hand` and `--force`; tares, then prints all pixel ADC/kPa/N/saturation values. |
+| `calibrate_gloves.py` | GUI-compatible OPEN/FIST wearer calibration; requires port assignment, `--user`, and `--output`. Audio is automatic when available; `--language cn` selects Chinese cues and `--no-audio` disables sound. |
 | `read_one_frame.py` | Prints one frame, including calibrated arrays with `--force FILE`. |
 | `test_glove.py` | Counts bytes/frames and saves a hex dump; close other readers first. |
 
