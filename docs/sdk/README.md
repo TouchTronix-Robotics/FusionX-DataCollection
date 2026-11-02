@@ -47,46 +47,48 @@ python examples/read_one_frame.py /dev/ttyUSB0 --hand lh
 
 ### Optional viewer and audio
 
-Base installation needs only pyserial and NumPy. Add `viewer` for PySide6/pyqtgraph or `audio` for the GUI's pinned miniaudio binding. For example, using a downloaded Linux x86_64 wheel:
+Install `audio` for spoken calibration instructions, `viewer` for the live glove display, or both. Run this in the folder containing your downloaded wheel (Linux x86_64 example):
 
 ```bash
 python -m pip install "./tactile_glove_sdk-0.6.0-cp313-cp313-linux_x86_64.whl[viewer,audio]"
+```
+
+Use your platform's wheel filename. For just one option, replace `[viewer,audio]` with `[viewer]` or `[audio]`. All sound files are included in the wheel.
+
+To open the viewer, run from the `FusionX-DataCollection` folder cloned above:
+
+```bash
 python examples/stream_glove.py --left /dev/ttyUSB0 --right /dev/ttyUSB1 --viewer
 ```
 
-Use the matching Windows or ARM64 wheel filename on those platforms, and install only the extras you need. The viewer needs a desktop/display session and compatible Qt runtime libraries. It shows raw ADC at 25 FPS while each port acquires independently. Close the window or press Ctrl+C to stop and close ports.
+The viewer needs a desktop session. If installation or playback fails, see [troubleshooting](troubleshooting.md#quick-fixes), including Linux ARM64 audio build requirements.
 
-All three SDK wheels include the original **13 English/Chinese calibration WAVs and beeps**, including when installed without extras. The `audio` extra supplies playback; no separate GUI installation, asset download, or speech service is needed. On Linux ARM64, the optional miniaudio binding may build from source and need a C compiler and Python development headers. Base acquisition and silent calibration do not need these audio build dependencies.
+## Glove calibration
 
-## Terminal wearer calibration
-
-Close the GUI or other readers using these ports, then run from the repository root:
+Put on the gloves and close the GUI or any other program using their ports. From the `FusionX-DataCollection` folder, run:
 
 ```bash
-python examples/calibrate_gloves.py --left COM3 --right COM4 --user operator --output operator.json
-# One glove also works:
-python examples/calibrate_gloves.py /dev/ttyUSB0 --hand lh --user operator --output operator.json
+python examples/calibrate_gloves.py --left /dev/ttyUSB0 --right /dev/ttyUSB1 --user operator --output operator.json
 ```
 
-Follow the printed **OPEN HAND** instruction with the worn glove relaxed and tactile pads contact-free, then make a **FIST** when instructed. Collection lasts three seconds per pose by default (`--hold-seconds` changes it). The routine uses the GUI's current calibration logic and saves a GUI-compatible wearer JSON with five 4×4 resting ADC patches, bend endpoints, pose samples, and quality results. Fist samples contain bend data only.
+Replace the ports with your actual left/right glove ports (`COM3` and `COM4`, for example, on Windows), and replace `operator` with the wearer's name. For one glove, omit the unused `--left` or `--right` option.
 
-Audio plays automatically when miniaudio is available. `--language cn` selects Chinese voice cues; printed terminal instructions are English. Use `--no-audio` for silence. Missing audio or an output-device failure is reported while text instructions remain usable. Ctrl+C closes the ports and audio output. Failed/cancelled attempts preserve an existing output file; success replaces it.
+Follow the prompts: hold your hands **OPEN** with the pads touching nothing, then make a **FIST** when asked. The script records each pose for three seconds. The result is saved to `operator.json`, which the GUI can also load.
 
-The same workflow is available in Python:
+English audio plays automatically when available after installing the `audio` option. Add `--language cn` for Chinese audio or `--no-audio` for silence. Text instructions always appear in English, even if sound is unavailable. Press Ctrl+C to cancel.
+
+You can also call calibration from Python:
 
 ```python
 from tactile_glove import calibrate
 
-wearer = calibrate(
-    {"lh": "COM3", "rh": "COM4"},
+calibrate(
+    {"lh": "/dev/ttyUSB0", "rh": "/dev/ttyUSB1"},
     user="operator", output="operator.json",
-    # language="cn",  # Chinese voice cues.
-    # audio=False,    # Silent mode.
 )
-resting_adc = wearer["gloves"]["lh"]["tactile_zero_finger"]
 ```
 
-Supply `resting_adc` as `GloveReader(..., force=PAIR_LUT, baseline_adc=resting_adc)` for the same wearer/session. The wearer calibration measures resting ADC and bend endpoints; pressure/newton output also needs the matching supplier per-pixel pressure LUT. Renew wearer calibration after putting the glove on again or changing wearers. See [the calibration API](api.md#wearer-calibration) for every argument, loading saved JSON, and cancellation.
+Repeat calibration after putting the gloves on again or changing wearers. This records resting sensor readings and finger bend endpoints; pressure/force output also needs the matching supplier calibration file. See [the calibration API](api.md#wearer-calibration) to reuse the saved readings in your SDK code.
 
 ## Read samples in your application
 
