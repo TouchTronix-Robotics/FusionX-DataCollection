@@ -107,13 +107,14 @@ baseline = calibration["gloves"][HAND]["tactile_zero_finger"]
 with GloveReader(PORT, hand=HAND) as glove:
     for frame in glove.stream():
         raw = frame.tactile.finger_pressure
-        zeroed = {
-            finger: [
-                max(0.0, value - resting)
-                for value, resting in zip(values, baseline[finger], strict=True)
-            ]
-            for finger, values in raw.items()
-        }
+        zeroed = {}
+        for finger, raw_pixels in raw.items():
+            baseline_pixels = baseline[finger]
+            zeroed[finger] = []
+
+            for raw_adc, baseline_adc in zip(raw_pixels, baseline_pixels, strict=True):
+                zeroed_adc = max(0.0, raw_adc - baseline_adc)
+                zeroed[finger].append(zeroed_adc)
         # Send zeroed to your processing/storage code; each finger has 16 pixels.
         print("index raw ADC:", raw["index"])
         print("index zeroed ADC:", zeroed["index"])
