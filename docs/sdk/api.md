@@ -150,7 +150,7 @@ All SDK wheels include the GUI's original English/Chinese WAV cues and beeps. Th
 
 ### Zero tactile ADC readings from a saved JSON
 
-The [complete zeroing example](README.md#use-the-saved-json-to-zero-tactile-readings) loads `operator.json` and uses NumPy's `np.maximum(raw - baseline, 0.0)` to zero all 80 pixels together. It requires no supplier LUT, retains fractional baselines, and produces a separate 5×16 zeroed-ADC array with rows in the saved JSON's finger order (`FINGERS` in the example). `frame.tactile.finger_pressure` always contains the original ADC dictionaries.
+The [complete zeroing example](README.md#use-the-saved-json-to-zero-tactile-readings) loads `operator.json` and keeps its baseline keyed by finger name. For each finger, NumPy's `np.maximum(raw_pixels - baseline[finger], 0.0)` subtracts and clips all 16 pixels together. It requires no supplier LUT, retains fractional baselines, and produces a separate dictionary of NumPy arrays, such as `zeroed["index"]`. `frame.tactile.finger_pressure` always contains the original ADC readings.
 
 ### Use the saved JSON for pressure and force
 

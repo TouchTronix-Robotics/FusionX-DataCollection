@@ -104,25 +104,23 @@ PORT = "/dev/ttyUSB0"  # Windows example: "COM3".
 
 with open("operator.json", encoding="utf-8") as source:
     calibration = json.load(source)
-baseline_by_finger = calibration["gloves"][HAND]["tactile_zero_finger"]
-FINGERS = tuple(baseline_by_finger)
-baseline = np.array(list(baseline_by_finger.values()), dtype=float)
-index_row = FINGERS.index("index")
+baseline = calibration["gloves"][HAND]["tactile_zero_finger"]
 
 with GloveReader(PORT, hand=HAND) as glove:
     for frame in glove.stream():
-        raw_by_finger = frame.tactile.finger_pressure
-        raw = np.array([raw_by_finger[finger] for finger in FINGERS], dtype=float)
-        zeroed = np.maximum(raw - baseline, 0.0)
+        raw = frame.tactile.finger_pressure
+        zeroed = {}
+        for finger, values in raw.items():
+            raw_pixels = np.asarray(values, dtype=float)
+            zeroed[finger] = np.maximum(raw_pixels - baseline[finger], 0.0)
 
-        # Select the index finger row; each row has 16 pixels.
-        print("index raw ADC:", raw[index_row])
-        print("index zeroed ADC:", zeroed[index_row])
+        print("index raw ADC:", raw["index"])
+        print("index zeroed ADC:", zeroed["index"])
 ```
 
-NumPy is installed with the SDK. The baseline is converted once before streaming. The JSON defines `FINGERS` row order; each frame uses that same order to form a **5×16** array. Pixel order stays unchanged. NumPy subtracts and clips all 80 pixels together; the short list comprehension only arranges the raw finger data into an array.
+NumPy is installed with the SDK. `baseline` keeps the saved readings keyed by finger name. Python loops over the five fingers; NumPy subtracts and clips each finger's 16 pixels together, keeping their original pixel order.
 
-`zeroed` is a 5×16 NumPy array. For example, raw `120` with baseline `100.5` becomes `19.5`; raw `98` becomes `0`. Using floating-point arrays preserves fractional baselines. The original frame, bend readings, and timestamps stay unchanged. Small positive readings can remain because of sensor noise.
+`zeroed` maps each finger name to a NumPy array of 16 zeroed ADC readings; for example, `zeroed["index"]`. Raw `120` with baseline `100.5` becomes `19.5`; raw `98` becomes `0`. Using floating-point arrays preserves fractional baselines. The original frame, bend readings, and timestamps stay unchanged. Small positive readings can remain because of sensor noise.
 
 Use the JSON for the same physical glove, hand, and wearing session. The selected hand must be present in the JSON; renew calibration after putting the glove on again or changing wearers. This example produces ADC counts and needs no supplier pressure file.
 
