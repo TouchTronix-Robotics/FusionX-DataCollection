@@ -148,7 +148,13 @@ The minimum valid-frame check and tactile-baseline warning match the GUI. Zero, 
 
 All SDK wheels include the GUI's original English/Chinese WAV cues and beeps. The optional `audio` extra installs miniaudio; headless calibration still works without that binding or any GUI libraries. See [audio installation](README.md#optional-viewer-and-audio).
 
-Load a saved wearer JSON and reuse its resting ADC with the matching supplier LUT:
+### Zero tactile ADC readings from a saved JSON
+
+The [complete zeroing example](README.md#use-the-saved-json-to-zero-tactile-readings) loads `operator.json` and computes `max(0.0, raw_adc - resting_adc)` separately for every finger/pixel. It requires no supplier LUT, retains fractional baselines, and produces a separate zeroed-ADC dictionary. `frame.tactile.finger_pressure` always contains the original ADC readings.
+
+### Use the saved JSON for pressure and force
+
+Load a saved wearer JSON and pass its resting ADC with the matching supplier LUT. `baseline_adc` requires `force`; it prepares the calibrated kPa/N fields without changing raw ADC:
 
 ```python
 import json
@@ -160,7 +166,11 @@ with GloveReader(
     baseline_adc=wearer["gloves"]["lh"]["tactile_zero_finger"],
 ) as glove:
     frame = next(glove.stream())
+    print(frame.tactile.finger_pressure_kPa_pixels["index"])
+    print(frame.tactile.finger_pressure_N_pixels["index"])
 ```
+
+The SDK converts the original raw ADC and resting ADC through the supplier LUT, then subtracts the resting pressure and clips at zero. Do not substitute zeroed ADC for the raw input to this conversion.
 
 Wearer calibration does not generate the supplier pressure LUT. Keep the worn glove contact-free during OPEN collection, use the correct hand/pair file, and renew the baseline after a wearer/session change or putting the glove on again. Raw SDK samples and both clocks are preserved.
 

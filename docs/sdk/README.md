@@ -90,6 +90,44 @@ calibrate(
 
 Repeat calibration after putting the gloves on again or changing wearers. This records resting sensor readings and finger bend endpoints; pressure/force output also needs the matching supplier calibration file. See [the calibration API](api.md#wearer-calibration) to reuse the saved readings in your SDK code.
 
+### Use the saved JSON to zero tactile readings
+
+Save this as `read_zeroed.py` in the same `FusionX-DataCollection` folder as `operator.json`, then run `python read_zeroed.py`:
+
+```python
+import json
+from tactile_glove import GloveReader
+
+HAND = "lh"  # Use "rh" and the right glove's port for the right hand.
+PORT = "/dev/ttyUSB0"  # Windows example: "COM3".
+with open("operator.json", encoding="utf-8") as source:
+    wearer = json.load(source)
+baseline = wearer["gloves"][HAND]["tactile_zero_finger"]
+
+try:
+    with GloveReader(PORT, hand=HAND) as glove:
+        for frame in glove.stream():
+            raw = frame.tactile.finger_pressure
+            zeroed = {
+                finger: [
+                    max(0.0, value - resting)
+                    for value, resting in zip(values, baseline[finger], strict=True)
+                ]
+                for finger, values in raw.items()
+            }
+            # Send zeroed to your processing/storage code; each finger has 16 pixels.
+            print("index raw ADC:", raw["index"])
+            print("index zeroed ADC:", zeroed["index"])
+except KeyboardInterrupt:
+    pass  # The context manager closes the glove port.
+```
+
+This subtracts each pixel's saved resting reading and clips negative results to zero, preserving fractional baselines. For example, raw `120` with baseline `100.5` becomes `19.5`; raw `98` becomes `0`. The `zeroed` dictionary contains all five fingers in the same pixel order as `raw`. The original frame, bend readings, and timestamps stay unchanged. Small positive readings can remain because of sensor noise.
+
+Use the JSON for the same physical glove, hand, and wearing session. The selected hand must be present in the JSON; renew calibration after putting the glove on again or changing wearers. This example produces ADC counts and needs no supplier pressure file.
+
+For kPa or newtons, pass the saved baseline as `baseline_adc` together with the matching supplier `force` file; see [saved-baseline pressure/force](api.md#use-the-saved-json-for-pressure-and-force). That option calibrates the pressure/force fields and leaves raw ADC unchanged.
+
 ## Read samples in your application
 
 ```python
