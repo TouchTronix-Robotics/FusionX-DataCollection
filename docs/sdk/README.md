@@ -104,22 +104,19 @@ with open("operator.json", encoding="utf-8") as source:
     calibration = json.load(source)
 baseline = calibration["gloves"][HAND]["tactile_zero_finger"]
 
-try:
-    with GloveReader(PORT, hand=HAND) as glove:
-        for frame in glove.stream():
-            raw = frame.tactile.finger_pressure
-            zeroed = {
-                finger: [
-                    max(0.0, value - resting)
-                    for value, resting in zip(values, baseline[finger], strict=True)
-                ]
-                for finger, values in raw.items()
-            }
-            # Send zeroed to your processing/storage code; each finger has 16 pixels.
-            print("index raw ADC:", raw["index"])
-            print("index zeroed ADC:", zeroed["index"])
-except KeyboardInterrupt:
-    pass  # The context manager closes the glove port.
+with GloveReader(PORT, hand=HAND) as glove:
+    for frame in glove.stream():
+        raw = frame.tactile.finger_pressure
+        zeroed = {
+            finger: [
+                max(0.0, value - resting)
+                for value, resting in zip(values, baseline[finger], strict=True)
+            ]
+            for finger, values in raw.items()
+        }
+        # Send zeroed to your processing/storage code; each finger has 16 pixels.
+        print("index raw ADC:", raw["index"])
+        print("index zeroed ADC:", zeroed["index"])
 ```
 
 This subtracts each pixel's saved resting reading and clips negative results to zero, preserving fractional baselines. For example, raw `120` with baseline `100.5` becomes `19.5`; raw `98` becomes `0`. The `zeroed` dictionary contains all five fingers in the same pixel order as `raw`. The original frame, bend readings, and timestamps stay unchanged. Small positive readings can remain because of sensor noise.
