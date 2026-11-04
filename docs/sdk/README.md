@@ -101,12 +101,13 @@ from tactile_glove import GloveReader
 
 HAND = "lh"  # Use "rh" and the right glove's port for the right hand.
 PORT = "/dev/ttyUSB0"  # Windows example: "COM3".
-FINGERS = ("thumb", "index", "middle", "ring", "little")
 
 with open("operator.json", encoding="utf-8") as source:
     calibration = json.load(source)
 baseline_by_finger = calibration["gloves"][HAND]["tactile_zero_finger"]
-baseline = np.array([baseline_by_finger[finger] for finger in FINGERS], dtype=float)
+FINGERS = tuple(baseline_by_finger)
+baseline = np.array(list(baseline_by_finger.values()), dtype=float)
+index_row = FINGERS.index("index")
 
 with GloveReader(PORT, hand=HAND) as glove:
     for frame in glove.stream():
@@ -114,12 +115,12 @@ with GloveReader(PORT, hand=HAND) as glove:
         raw = np.array([raw_by_finger[finger] for finger in FINGERS], dtype=float)
         zeroed = np.maximum(raw - baseline, 0.0)
 
-        # Rows follow FINGERS; row 1 is index, with 16 pixels.
-        print("index raw ADC:", raw[1])
-        print("index zeroed ADC:", zeroed[1])
+        # Select the index finger row; each row has 16 pixels.
+        print("index raw ADC:", raw[index_row])
+        print("index zeroed ADC:", zeroed[index_row])
 ```
 
-NumPy is installed with the SDK. The baseline is converted once before streaming. Each frame is packed into a **5×16** array with rows in `FINGERS` order and pixels in their original order. NumPy subtracts and clips all 80 pixels together; the short list comprehensions only arrange the named finger data into arrays.
+NumPy is installed with the SDK. The baseline is converted once before streaming. The JSON defines `FINGERS` row order; each frame uses that same order to form a **5×16** array. Pixel order stays unchanged. NumPy subtracts and clips all 80 pixels together; the short list comprehension only arranges the raw finger data into an array.
 
 `zeroed` is a 5×16 NumPy array. For example, raw `120` with baseline `100.5` becomes `19.5`; raw `98` becomes `0`. Using floating-point arrays preserves fractional baselines. The original frame, bend readings, and timestamps stay unchanged. Small positive readings can remain because of sensor noise.
 
