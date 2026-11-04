@@ -118,8 +118,6 @@ with GloveReader(PORT, hand=HAND) as glove:
         print("index zeroed ADC:", zeroed["index"])
 ```
 
-NumPy is installed with the SDK. `baseline` keeps the saved readings keyed by finger name. Python loops over the five fingers; NumPy subtracts and clips each finger's 16 pixels together, keeping their original pixel order.
-
 `zeroed` maps each finger name to a NumPy array of 16 zeroed ADC readings; for example, `zeroed["index"]`. Raw `120` with baseline `100.5` becomes `19.5`; raw `98` becomes `0`. Using floating-point arrays preserves fractional baselines. The original frame, bend readings, and timestamps stay unchanged. Small positive readings can remain because of sensor noise.
 
 Use the JSON for the same physical glove, hand, and wearing session. The selected hand must be present in the JSON; renew calibration after putting the glove on again or changing wearers. This example produces ADC counts and needs no supplier pressure file.
