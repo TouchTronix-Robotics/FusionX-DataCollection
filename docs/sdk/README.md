@@ -101,8 +101,8 @@ from tactile_glove import GloveReader
 HAND = "lh"  # Use "rh" and the right glove's port for the right hand.
 PORT = "/dev/ttyUSB0"  # Windows example: "COM3".
 with open("operator.json", encoding="utf-8") as source:
-    wearer = json.load(source)
-baseline = wearer["gloves"][HAND]["tactile_zero_finger"]
+    calibration = json.load(source)
+baseline = calibration["gloves"][HAND]["tactile_zero_finger"]
 
 try:
     with GloveReader(PORT, hand=HAND) as glove:

@@ -130,11 +130,11 @@ def calibrate(
 | `stop_event` | Optional `threading.Event` for cancellation. |
 
 ```python
-wearer = calibrate(
+calibration = calibrate(
     {"lh": "COM3", "rh": "COM4"}, user="operator", output="operator.json",
     language="en",  # "cn" selects Chinese voice cues.
 )
-resting_adc = wearer["gloves"]["lh"]["tactile_zero_finger"]
+resting_adc = calibration["gloves"]["lh"]["tactile_zero_finger"]
 ```
 
 The return value is a JSON-compatible dictionary with top-level `layout`, `user`, `timestamp`, and `gloves` keys. It uses the GUI's current V01.12 layout. Each selected hand contains:
@@ -160,10 +160,10 @@ Load a saved wearer JSON and pass its resting ADC with the matching supplier LUT
 import json
 
 with open("operator.json", encoding="utf-8") as source:
-    wearer = json.load(source)
+    calibration = json.load(source)
 with GloveReader(
     PORT, hand="lh", force="calibrations/example_perpixel_pressure.json",
-    baseline_adc=wearer["gloves"]["lh"]["tactile_zero_finger"],
+    baseline_adc=calibration["gloves"]["lh"]["tactile_zero_finger"],
 ) as glove:
     frame = next(glove.stream())
     print(frame.tactile.finger_pressure_kPa_pixels["index"])
