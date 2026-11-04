@@ -75,7 +75,7 @@ Replace the ports with your actual left/right glove ports (`COM3` and `COM4`, fo
 
 Follow the prompts: hold your hands **OPEN** with the pads touching nothing, then make a **FIST** when asked. The script records each pose for three seconds. The result is saved to `operator.json`, which the GUI can also load.
 
-English audio plays automatically when available after installing the `audio` option. Add `--language cn` for Chinese audio or `--no-audio` for silence. Text instructions always appear in English, even if sound is unavailable. Press Ctrl+C to cancel.
+English audio plays automatically when available after installing the `audio` option. Add `--language cn` for Chinese audio or `--no-audio` for silence.
 
 You can also call calibration from Python:
 
