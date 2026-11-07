@@ -20,7 +20,7 @@
 | Wheel will not install | Match CPython 3.13, OS, and x86_64 or Linux ARM64 architecture; ARM64 also needs glibc 2.28+. |
 | Port unavailable | Close the GUI/other readers; check Device Manager or Linux permissions. |
 | Wrong hand | Touch one glove; correct `--left`/`--right` or API `hand`. |
-| `TimeoutError` | No valid sample for two seconds; inspect cable/power and reconnect. Examples do not retry automatically. |
+| `TimeoutError` | No valid sample for two seconds. Hold each glove's button until its yellow light flashes ([demo](../../README.md#enable-glove-communication-mode)), then check cable/power and reconnect. Examples do not retry automatically. |
 | Calibrated fields are `None` | Supply the matching `--force FILE`; API callers also need `tare()` or `baseline_adc`. |
 | Saturation stays true after tare | Flag uses original raw ADC `>=4000`; treat it as a lower bound. |
 | No calibration sound | Install your wheel with the `audio` extra; check the selected system output and volume. Audio warnings do not stop valid text calibration. `--no-audio` requests silence. |

@@ -17,6 +17,7 @@ Use [v3.0.0](https://github.com/TouchTronix-Robotics/FusionX-DataCollection/rele
 | AppImage will not start | Make executable; install FUSE 3. Use a writable folder or choose other data/calibration locations. |
 | Encoder unavailable | Use FFmpeg with QSV or CPU `libx264` at native resolution; the app validates the selected executable. |
 | Pressure unavailable | Select current wearer + matching glove-pair calibration; filename contains `pressure` or `force`. |
+| Glove connected but no data | Hold each glove's button until its yellow light flashes to enable communication mode ([demo](../../README.md#enable-glove-communication-mode)). |
 | Wrong glove hand | Touch each glove to verify its heatmap, then correct LH/RH ports. |
 | Port access denied | Close other readers; check Linux serial group or Windows driver/COM port. |
 | Slow preview | **Stop Preview** reduces display work while recording continues. |

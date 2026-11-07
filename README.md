@@ -4,6 +4,14 @@
 
 Each glove has five 4×4 pressure patches and five bend channels.
 
+## Enable glove communication mode
+
+**Press and hold the button on each glove until its yellow indicator light starts flashing.** This enables communication mode so the GUI or SDK can receive data.
+
+<img src="assets/glove-communication-mode.gif" alt="Glove indicator lights flashing in communication mode" width="240">
+
+[Watch or download the silent video](assets/glove-communication-mode.mp4).
+
 ## Download v3.0.0
 
 [Release notes and all downloads](https://github.com/TouchTronix-Robotics/FusionX-DataCollection/releases/tag/v3.0.0)

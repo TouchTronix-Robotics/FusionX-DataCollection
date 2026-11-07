@@ -34,6 +34,8 @@ py -3.13 -m venv .venv
 python -m pip install .\tactile_glove_sdk-0.6.0-cp313-cp313-win_amd64.whl
 ```
 
+Before running any example, **press and hold the button on each glove until its yellow indicator light starts flashing** to enable communication mode. See the [startup demonstration](../../README.md#enable-glove-communication-mode).
+
 Get the examples, then assign your actual glove ports:
 
 ```bash
